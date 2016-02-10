@@ -10,14 +10,14 @@ subtitle: 'Another Static Site Quick Starter Theme'
 #  use site.url only inside the web feed template (e.g. requires full url incl. protocol)
 #    note: for root path use empty string e.g. '' - do NOT include trailing slash e.g. /
 
-path:  '/jekyll-starter-theme-v2'
-url:   'http://planetjekyll.github.io/jekyll-starter-theme-v2'
+path:  '/'
+url:   'http://enhanced.github.io'
 
 
 nav:
-- { title: 'Welcome',              href: '/jekyll-starter-theme-v2/' }
-- { title: 'Page Two',             href: '/jekyll-starter-theme-v2/two.html' }
-- { title: 'Page Three',           href: '/jekyll-starter-theme-v2/three.html' }
+- { title: 'Welcome',              href: '/' }
+- { title: 'Page Two',             href: '/two.html' }
+- { title: 'Page Three',           href: '/three.html' }
 - { title: 'Questions? Comments?', href: 'http://groups.google.com/group/wwwmake' }
 - { title: 'About',                href: 'https://github.com/planetjekyll/jekyll-starter-theme-v2' }
 
