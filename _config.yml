@@ -36,7 +36,7 @@ titlecase: true
 
 
 # Site owner
-owner: enhanced
+owner:
   name: enhanced
   email: enchanced@rootedyour.com
   twitter: enhancedx
