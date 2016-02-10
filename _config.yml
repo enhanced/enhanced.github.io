@@ -4,7 +4,8 @@ highlighter:      pygments
 
 # Permalinks
 permalink:        pretty
-relative_permalinks: true
+gems: [jekyll-paginate]
+#relative_permalinks: true
 
 # Setup
 title:            Enhanced 
