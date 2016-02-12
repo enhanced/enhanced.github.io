@@ -45,7 +45,7 @@ This will be the primary control device for everything.  It will be responsible 
 #### RTL-SDR
 * For APRS iGate
 * Cost: $25
->note The RTL-SDR will interface directly with the Rasberry Pi, see notes below for APRS iGate.
+{: .note} The RTL-SDR will interface directly with the Rasberry Pi, see notes below for APRS iGate.
 
 #### URI (radio to pi interface and controller)
 * http://dmkeng.com/URI_Order_Page.htm
@@ -152,4 +152,4 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
     - http://apps.magicbug.co.uk/passcode/index.php
     - https://github.com/magicbug/PHP-APRS-Passcode
     - Code is included with pymultimonaprs also
->note It is CRITICAL to note that the GAIN needs to be adjusted to a value that the RTL-SDR supports, these values can be determined by running the rtl_test and then sampling to see what you get 
+{: .note} It is CRITICAL to note that the GAIN needs to be adjusted to a value that the RTL-SDR supports, these values can be determined by running the rtl_test and then sampling to see what you get 
