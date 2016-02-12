@@ -1,5 +1,9 @@
 # Site wide configuration
 
+markdown: redcarpet
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
+
 title: enhanced things
 description:
 logo: # 120x120 px default image used for Twitter summary card
