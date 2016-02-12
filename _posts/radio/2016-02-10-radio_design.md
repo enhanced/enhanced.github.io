@@ -77,29 +77,48 @@ The following components are those that will be used to build the allstar linked
     - More research being done
 
 ## Power Consumption
++--------+-----+---------+----------+
 | Device | VDC | Tx Amps | Sty Amps |
-| ------ | --- | ------- | -------- |
++========+=====+=========+==========+
 | Radio  | 14.2| 8.5     | 1.7      |
++--------+-----+---------+----------+
 | Raspi  | 12  | 2       | 2        |
++--------+-----+---------+----------+
 | Power Control | 12 | 70mA | 70mA  |
++--------+-----+---------+----------+
 | TOTALS | 12  |  10.6 | 3.8 |
++--------+-----+---------+----------+
 
 ## Price List
++--------+-------+
 | Device | Price |
-| ------ | ----- |
++========+=======+
 | Radio  | $875  |
++--------+-------+
 | Duplexer | $175 |
-| Raspi  | $49   | 
++--------+-------+
+| Raspi  | $49   |
++--------+-------+ 
 | RTL-STR| $25   |
++--------+-------+
 | URI    | $69   |
++--------+-------+
 | UHF Antenna|$350|
++--------+-------+
 | VHF Antenna | $100|
++--------+-------+
 | UHF Feedline | $150 |
++--------+-------+
 | VHF Feedline | $150 |
++--------+-------+
 | Power Control 4005i | $300 |
++--------+-------+
 | Batteries | $860 |
++--------+-------+
 | Rack Equipment | $200 |
++--------+-------+
 | Total | $3303 |
++--------+-------+
 
 ## Misc Applications
 * QRadioPredict
