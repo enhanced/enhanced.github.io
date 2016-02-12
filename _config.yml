@@ -12,10 +12,10 @@ baseurl: ''
 
 social:
   github: enhanced 
-  stackoverflow: ''
-  linkedin:
-  instagram: ''
-  lastfm: ''
+  #stackoverflow: ''
+  #linkedin:
+  #instagram: ''
+  #lastfm: ''
   rss: feed.xml
 
 # Google Analytics key, leave blank to ignore
