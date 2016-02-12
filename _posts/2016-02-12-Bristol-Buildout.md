@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Initial Bristol Head Buildout Post"
+title: "N0PKT Initial Bristol Head Buildout Post"
 date: 2016-02-12 00:00:00
 tags: 
  - "amateaur radio"
@@ -12,7 +12,7 @@ tags:
 description: Initial post about the Bristol Head repeater buildout.  This is the basic hardware list and links to more information.
 ---
 
-## n0pkt Bristol repeater buildout
+## Initial N0PKT Bristol Head Repeater Buildout Notes
 
 The following components are those that will be used to build the allstar linked repeater on Bristol Head in Mineral County, CO.  The exact location can be seen on google earth at: http://goo.gl/cLpKuq
 
@@ -100,16 +100,20 @@ This is a solar/battery/generator site, where the main feed will be a 48v feed. 
 The system will be mounted in a rack, assuming we will need minimal mounting items.
 
 ### Power Consumption
+
+|-----------------------------------|
 | Device | VDC | Tx Amps | Sty Amps |
-|--------|-----|---------|----------|
+|--------+-----+---------+----------|
 | Radio  | 14.2| 8.5     | 1.7      |
 | Raspi  | 12  | 2       | 2        |
 | Power Control | 12 | 70mA | 70mA  |
 | TOTALS | 12  |  10.6 | 3.8 |
 
 ### Price List
+
+|----------------|
 | Device | Price |
-|--------|-------|
+|--------+-------|
 | Repeater  | $875  |
 | Duplexer | $175 |
 | Raspi  | $49   | 
