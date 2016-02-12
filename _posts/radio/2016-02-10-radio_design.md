@@ -9,8 +9,7 @@ The following components are those that will be used to build the allstar linked
         + 8.5 AMP on TX
         + 1.7 AMP on Stby
         + 14.2 VDC
-    - Cost
-        + $875
+    - Cost $875
 * Rasberry Pi II Model B (1GB)
     - 32GB Micro SD Card
     - Running DIAL for AllStarLink
@@ -18,27 +17,22 @@ The following components are those that will be used to build the allstar linked
     - Power Requirements
         + 2 AMP
         + 5 VDC
-    - Cost
-        + $49
+    - Cost $49
 * RTL-SDR
     -  For APRS iGate
     -  $25
 * URI (radio to pi interface and controller)
     - http://dmkeng.com/URI_Order_Page.htm
-    - Cost
-        + $69
+    - Cost $69
 * Duplexer
     - http://www.ebay.com/itm/UHF-6-CAVITY-DUPLEXER-for-radio-repeater-N-connector-SQ-/221370208031?hash=item338ab14f1f:g:MZcAAOSw~bFWFabO
-    - Cost
-        + $175
+    - Cost $175
 * Diamond X700HNA (UHF)
     - http://www.theantennafarm.com/catalog/commscope-db420-b-4271.html
     - http://www.theantennafarm.com/catalog/diamond-x700hna-7288.html
-    - Cost
-        + $350
+    - Cost $350
 * Diamond X50NA Antenna (VHF)
-    - Cost
-        + $100
+    - Cost $100
 
 ## Supporting Hardware
 * Power Control
