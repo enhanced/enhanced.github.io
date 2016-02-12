@@ -1,8 +1,14 @@
 ---
 layout: post
 title: "Initial Bristol Head Buildout Post"
-date: 2016-02-12 14:08:06
-tags: "amateaur radio" repeater n0pkt "rasberry pi" APRS electronics
+date: 2016-02-12 00:00:00
+tags: 
+ - "amateaur radio"
+ - repeater
+ - n0pkt
+ - "rasberry pi"
+ - APRS
+ - electronics
 description: Initial post about the Bristol Head repeater buildout.  This is the basic hardware list and links to more information.
 ---
 
