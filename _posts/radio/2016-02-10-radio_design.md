@@ -1,10 +1,7 @@
-n0pkt Bristol repeater buildout
-===============================
-
+# n0pkt Bristol repeater buildout
 The following components are those that will be used to build the allstar linked repeater on Bristol Head in Mineral County, CO.  The exact location can be seen at http://goo.gl/cLpKuq
 
-Base Radio Components
-------------------------
+## Base Radio Components
 * MTR2000 40 Watt Radio
     - http://www.repeater-builder.com/motorola/mtr2k/pdf/mtr2000-vhf-uhf-catsheet.pdf
     - http://www.ebay.com/itm/Motorola-MTR2000-UHF-40-Watts-403-470-Mhz-HAM-GR1225-/191157286287?hash=item2c81dcb58f:g:ZysAAOSwCQNWfxIJ
