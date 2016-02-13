@@ -104,7 +104,7 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
 
 |-----------------------------------|
 | Device | VDC | Tx Amps | Sty Amps |
-|--------+-----+---------+----------|
+|:-------+:---:+:-------:+---------:|
 | Radio  | 14.2| 8.5     | 1.7      |
 | Raspi  | 12  | 2       | 2        |
 | Power Control | 12 | 70mA | 70mA  |
@@ -114,13 +114,13 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
 
 |----------------|
 | Device | Price |
-|--------+-------|
+|:-------+------:|
 | Repeater  | $875  |
 | Duplexer | $175 |
 | Raspi  | $49   | 
-| RTL-STR| $25   |
+| RTL-STR | $25   |
 | URI    | $69   |
-| UHF Antenna|$1625|
+| UHF Antenna| $1625 |
 | VHF Antenna | $100|
 | UHF Feedline | $150 |
 | VHF Feedline | $150 |
