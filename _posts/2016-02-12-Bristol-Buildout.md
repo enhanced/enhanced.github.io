@@ -103,12 +103,12 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
 ### Power Consumption
 
 |-----------------------------------|
-| Device | VDC | Tx Amps | Sty Amps |
+| Device | VDC | Tx Amps | St Amps |
 |:-------+:---:+:-------:+---------:|
 | Radio  | 14.2|       8.5      | 1.7      |
 | Raspi  | 12  | 2       | 2        |
 | Power Control | 12 | 70mA | 70mA  |
-| TOTALS | 12  |  10.6 | 3.8 |
+| Total | 12  |  10.6 | 3.8 |
 
 ### Price List
 
@@ -141,7 +141,7 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
 * [Propogation Modeling](http://www.ve2dbe.com/)
     - Used to simulate propogation (online)
 
-### Raspi APRS Buildout
+### RasPi APRS iGate Buildout
 * [Some Directions](http://sq7mru.blogspot.co.nz/2013/08/aprs-igate-rx-z-tunera-dvb-t.html)
 * [klaibrate-rtl](https://github.com/asdil12/kalibrate-rtl.git)
 * Generate a passcode:
