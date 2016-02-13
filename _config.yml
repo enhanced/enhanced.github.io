@@ -11,12 +11,9 @@ url: http://enhanced.github.io
 baseurl: ''
 
 social:
-  github: enhanced 
+  github: enhanced
   twitter: enhancedx
-  #stackoverflow: ''
-  #linkedin:
-  #instagram: ''
-  #lastfm: ''
+  500px: extremedepth
   rss: feed.xml
 
 # Google Analytics key, leave blank to ignore

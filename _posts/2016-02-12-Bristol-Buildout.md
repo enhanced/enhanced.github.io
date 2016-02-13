@@ -3,7 +3,7 @@ layout: post
 title: "N0PKT Initial Bristol Head Buildout Post"
 date: 2016-02-12 00:00:00
 tags: 
- - "amateaur radio"
+ - "amateur radio"
  - repeater
  - n0pkt
  - "rasberry pi"
@@ -45,6 +45,7 @@ This will be the primary control device for everything.  It will be responsible 
 #### RTL-SDR
 * For APRS iGate
 * Cost: $25
+ 
  >The RTL-SDR will interface directly with the Rasberry Pi, see notes below for APRS iGate.
  {: .note}
 
@@ -153,5 +154,6 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
     - http://apps.magicbug.co.uk/passcode/index.php
     - https://github.com/magicbug/PHP-APRS-Passcode
     - Code is included with pymultimonaprs also
+ 
  >It is CRITICAL to note that the GAIN needs to be adjusted to a value that the RTL-SDR supports, these values can be determined by running the rtl_test and then sampling to see what you get .
  {: .note}
