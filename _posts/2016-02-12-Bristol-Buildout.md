@@ -14,16 +14,16 @@ description: Initial post about the Bristol Head repeater buildout.  This is the
 
 ## Initial N0PKT Bristol Head Repeater Buildout Notes
 
-The following components are those that will be used to build the allstar linked repeater on Bristol Head in Mineral County, CO.  The exact location can be seen on [google maps](https://goo.gl/dv2Wdv)
+The following components are those that will be used to build the [allstarlink](https://www.allstarlink.org/) repeater on Bristol Head in Mineral County, CO.  The exact location that this repeater will be placed can be seen on [google maps](https://goo.gl/dv2Wdv)
 
-I have been working closely with the Mineral County Sherriffs office to build a system that can be used by the public in a highly reliable way (this covers some back country locations and a substantial amount of coverage along the colorado trail) and for Search and Rescue (SAR) operations.
+I have been working closely with the Mineral County Sherriffs office to build a system that capable of reliable use by the public and for Search and Rescue (SAR) operations.  The coverage area will be from Mineral County into Rio Grande County, parts of Hinsdale County and other surrounding areas.  In a later post I will include a coverage map.
 
-I have not included details about the feedlines in this post, suffice it to say that I am hoping to get feedline for both the UHF and VHF side donated from the [Cheyenne Mountain Repeater Group](http://www.cmrg.org) in the form of 1/2" and 7/8" heliax.
+I have not included details about the feedlines in this post, suffice it to say that I am hoping to get feedline for both the UHF and VHF side donated from the [Cheyenne Mountain Repeater Group](http://www.cmrg.org) in the form of 1/2" and 7/8" [heliax](https://en.wikipedia.org/wiki/Coaxial_cable).
 
 
 ### Core Radio Components
 
-#### MTR2000 40 Watt Radio
+#### [MTR2000 40 Watt Radio](http://www.motorolasolutions.com/en_us/products/mototrbo-systems/discontinued/mtr2000.html)
 * [Repeater PDF Info](http://www.repeater-builder.com/motorola/mtr2k/pdf/mtr2000-vhf-uhf-catsheet.pdf)
 * [Ebay Reseller](http://www.ebay.com/itm/Motorola-MTR2000-UHF-40-Watts-403-470-Mhz-HAM-GR1225-/191157286287?hash=item2c81dcb58f:g:ZysAAOSwCQNWfxIJ)
 * Power Requirements
@@ -33,7 +33,7 @@ I have not included details about the feedlines in this post, suffice it to say 
 * Cost: $875
 
 
-#### Rasberry Pi II Model B (1GB)
+#### [Rasberry Pi II Model B (1GB)](https://www.raspberrypi.org/products/raspberry-pi-2-model-b/)
 This will be the primary control device for everything.  It will be responsible for not only APRS information relay but also control the repeater and allow for linking into the [Fun Machine](http://www.k0jsc.com) repeater system while also providing auto patch and reverse auto patch access.
 
 * 32GB Micro SD Card
@@ -44,7 +44,7 @@ This will be the primary control device for everything.  It will be responsible 
 * Cost: $49
  
 
-#### RTL-SDR
+#### [RTL-SDR](http://www.rtl-sdr.com/)
 * For APRS iGate
 * Cost: $25
  
@@ -52,7 +52,7 @@ This will be the primary control device for everything.  It will be responsible 
  {: .note}
 
 
-#### URI (radio to pi interface and controller)
+#### [URI (radio to pi interface and controller)](http://dmkeng.com/URI_Order_Page.htm)
 * [http://dmkeng.com/URI_Order_Page.htm](http://dmkeng.com/URI_Order_Page.htm)
 * Cost: $69
 
