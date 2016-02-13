@@ -20,6 +20,7 @@ I have been working closely with the Mineral County Sherriffs office to build a 
 
 I have not included details about the feedlines in this post, suffice it to say that I am hoping to get feedline for both the UHF and VHF side donated from the [Cheyenne Mountain Repeater Group](http://www.cmrg.org) in the form of 1/2" and 7/8" heliax.
 
+
 ### Core Radio Components
 
 #### MTR2000 40 Watt Radio
@@ -31,6 +32,7 @@ I have not included details about the feedlines in this post, suffice it to say 
     - 14.2 VDC
 * Cost: $875
 
+
 #### Rasberry Pi II Model B (1GB)
 This will be the primary control device for everything.  It will be responsible for not only APRS information relay but also control the repeater and allow for linking into the [Fun Machine](http://www.k0jsc.com) repeater system while also providing auto patch and reverse auto patch access.
 
@@ -41,6 +43,7 @@ This will be the primary control device for everything.  It will be responsible 
    - 5 VDC
 * Cost: $49
  
+
 #### RTL-SDR
 * For APRS iGate
 * Cost: $25
@@ -48,23 +51,29 @@ This will be the primary control device for everything.  It will be responsible 
  >The RTL-SDR will interface directly with the Rasberry Pi, see notes below for APRS iGate.
  {: .note}
 
+
 #### URI (radio to pi interface and controller)
 * [http://dmkeng.com/URI_Order_Page.htm](http://dmkeng.com/URI_Order_Page.htm)
 * Cost: $69
+
 
 #### Duplexer
 * [Ebay Reseller](http://www.ebay.com/itm/UHF-6-CAVITY-DUPLEXER-for-radio-repeater-N-connector-SQ-/221370208031?hash=item338ab14f1f:g:MZcAAOSw~bFWFabO)
 * Cost: $175
 
+
 #### Commscope DB420 (or equivalent for TX antenna)
 * [Antenna Farm](http://www.theantennafarm.com/catalog/commscope-db420-b-4271.html)
 * Cost: $1625.00
+
 
 #### Diamond X50NA Antenna (VHF APRS RX antenna)
 * Cost: $100
 
 
+
 ### Miscelanious Supporting Hardware
+
 
 #### Power Control
 The Power Controller will be controlled by the GPIO pins on the Rasberry Pi.  it will consist of the following components, I will detail more in a followon posting.
@@ -85,6 +94,7 @@ The Power Controller will be controlled by the GPIO pins on the Rasberry Pi.  it
     - [http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/](http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/)
     - [http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/](http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/)
  
+
 #### Power StepDown Conversion and Source
 This is a solar/battery/generator site, where the main feed will be a 48v feed.  This feed will need to be down-converted to a 12v feed to power the Rasberry Pi and repeater.
 
@@ -97,8 +107,10 @@ This is a solar/battery/generator site, where the main feed will be a 48v feed. 
         + $150
         + $150 shipping
 
+
 #### Mounting Hardware
 The system will be mounted in a rack, assuming we will need minimal mounting items.
+
 
 ### Power Consumption
 
@@ -108,7 +120,8 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
 | Radio  | 14.2|       8.5      | 1.7      |
 | Raspi  | 12  | 2       | 2        |
 | Power Control | 12 | 70mA | 70mA  |
-| Total | 12  |  10.6 | 3.8 |
+| **Total** | **12**  |  **10.6** | **3.8** |
+
 
 ### Price List
 
@@ -131,7 +144,8 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
 | Converter | $50 | 
 | Batteries | $750 |
 | Rack Equipment | $200 |
-| Total | $4265.00 |
+| **Total** | **$4265.00** |
+
 
 ### Misc Applications
 * [QRadioPredict](https://github.com/kantooon/qradiopredict)
@@ -140,6 +154,7 @@ The system will be mounted in a rack, assuming we will need minimal mounting ite
     - Runs on Rasberry Pi to create allstar controller and add other critical features
 * [Propogation Modeling](http://www.ve2dbe.com/)
     - Used to simulate propogation (online)
+
 
 ### RasPi APRS iGate Buildout
 * [Some Directions](http://sq7mru.blogspot.co.nz/2013/08/aprs-igate-rx-z-tunera-dvb-t.html)
