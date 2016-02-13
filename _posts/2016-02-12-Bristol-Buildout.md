@@ -14,7 +14,7 @@ description: Initial post about the Bristol Head repeater buildout.  This is the
 
 ## Initial N0PKT Bristol Head Repeater Buildout Notes
 
-The following components are those that will be used to build the allstar linked repeater on Bristol Head in Mineral County, CO.  The exact location can be seen on [google earth](http://goo.gl/cLpKuq)
+The following components are those that will be used to build the allstar linked repeater on Bristol Head in Mineral County, CO.  The exact location can be seen on [google maps](https://goo.gl/dv2Wdv)
 
 I have been working closely with the Mineral County Sherriffs office to build a system that can be used by the public in a highly reliable way (this covers some back country locations and a substantial amount of coverage along the colorado trail) and for Search and Rescue (SAR) operations.
 
@@ -23,7 +23,7 @@ I have not included details about the feedlines in this post, suffice it to say 
 ### Core Radio Components
 
 #### MTR2000 40 Watt Radio
-* [URI Info](http://www.repeater-builder.com/motorola/mtr2k/pdf/mtr2000-vhf-uhf-catsheet.pdf)
+* [Repeater PDF Info](http://www.repeater-builder.com/motorola/mtr2k/pdf/mtr2000-vhf-uhf-catsheet.pdf)
 * [Ebay Reseller](http://www.ebay.com/itm/Motorola-MTR2000-UHF-40-Watts-403-470-Mhz-HAM-GR1225-/191157286287?hash=item2c81dcb58f:g:ZysAAOSwCQNWfxIJ)
 * Power Requirements
     - 8.5 AMP on TX
@@ -49,7 +49,7 @@ This will be the primary control device for everything.  It will be responsible 
  {: .note}
 
 #### URI (radio to pi interface and controller)
-* [http://dmkeng.com/URI_Order_Page.htm]
+* [http://dmkeng.com/URI_Order_Page.htm](http://dmkeng.com/URI_Order_Page.htm)
 * Cost: $69
 
 #### Duplexer
@@ -82,8 +82,8 @@ The Power Controller will be controlled by the GPIO pins on the Rasberry Pi.  it
     - [Amazon](http://amzn.com/B00M5WLZDW)
     - Cost: $14.99
 * Misc Informational Links to Similar Projects
-    - [http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/]
-    - [http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/]
+    - [http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/](http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/)
+    - [http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/](http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/)
  
 #### Power StepDown Conversion and Source
 This is a solar/battery/generator site, where the main feed will be a 48v feed.  This feed will need to be down-converted to a 12v feed to power the Rasberry Pi and repeater.
@@ -93,7 +93,7 @@ This is a solar/battery/generator site, where the main feed will be a 48v feed. 
     - Cost: $50
 * Battery Bank
     - BWG 121000 x4
-        + [http://www.bwgllc.com/products/bwg-121000-group-27/]
+        + [http://www.bwgllc.com/products/bwg-121000-group-27/](http://www.bwgllc.com/products/bwg-121000-group-27/)
         + $150
         + $150 shipping
 
