@@ -8,6 +8,18 @@
     </li>
   {% endif %}
 
+  {% if site.social.twitter %}
+    <li>
+      <a title="{{ site.social.twitter }} RSS" href="http://www.twitter.com/{{ site.social.twitter }}" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+    </li>
+  {% endif %}
+
+  {% if site.social.500px %}
+    <li>
+      <a title="{{ site.social.500px }} RSS" href="http://500px.com/{{ site.social.500px }}" target="_blank"><i class="fa fa-500px fa-2x"></i></a>
+    </li>
+  {% endif %}
+
   {% if site.social.stackoverflow %}
     <li>
       <a title="{{ site.social.stackoverflow }} on StackOverflow" href="http://stackoverflow.com/users/{{ site.social.stackoverflow }}" target="_blank"><i class="fa fa-stack-overflow fa-2x"></i></a>
@@ -35,18 +47,6 @@
   {% if site.social.rss %}
     <li>
       <a title="{{ site.social.rss }} RSS" href="{{site.url}}/{{ site.social.rss }}" target="_blank"><i class="fa fa-rss fa-2x"></i></a>
-    </li>
-  {% endif %}
-
-  {% if site.social.twitter %}
-    <li>
-      <a title="{{ site.social.twitter }} RSS" href="http://www.twitter.com/{{ site.social.twitter }}" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
-    </li>
-  {% endif %}
-
-  {% if site.social.500px %}
-    <li>
-      <a title="{{ site.social.500px }} RSS" href="http://500px.com/{{ site.social.500px }}" target="_blank"><i class="fa fa-500px fa-2x"></i></a>
     </li>
   {% endif %}
 
