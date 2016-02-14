@@ -57,17 +57,17 @@ This will be the primary control device for everything.  It will be responsible 
 * Cost: $69
 
 
-#### Duplexer
+#### [Duplexer](https://en.wikipedia.org/wiki/Duplexer)
 * [Ebay Reseller](http://www.ebay.com/itm/UHF-6-CAVITY-DUPLEXER-for-radio-repeater-N-connector-SQ-/221370208031?hash=item338ab14f1f:g:MZcAAOSw~bFWFabO)
 * Cost: $175
 
 
-#### Commscope DB420 (or equivalent for TX antenna)
+#### [Commscope DB420 (or equivalent for TX antenna)](http://www.commscope.com/catalog/andrew/product_details.aspx?id=15460)
 * [Antenna Farm](http://www.theantennafarm.com/catalog/commscope-db420-b-4271.html)
 * Cost: $1625.00
 
 
-#### Diamond X50NA Antenna (VHF APRS RX antenna)
+#### [Diamond X50NA Antenna (VHF APRS RX antenna)](http://www.diamondantenna.net/x50a.html)
 * Cost: $100
 
 
