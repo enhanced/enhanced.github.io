@@ -37,7 +37,6 @@ highlighter: rouge
 
 markdown: kramdown
 kramdown:
-  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
   input: GFM # Enable GitHub Flavored Markdown (fenced code blocks)
 
 exclude: ['README.md', 'LICENSE']
