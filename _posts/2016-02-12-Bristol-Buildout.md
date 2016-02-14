@@ -16,7 +16,7 @@ description: Initial post about the Bristol Head repeater buildout.  This is the
 
 The following components are those that will be used to build the [allstarlink](https://www.allstarlink.org/) repeater on Bristol Head in Mineral County, CO.  The exact location that this repeater will be placed can be seen on [google maps](https://goo.gl/dv2Wdv)
 
-I have been working closely with the Mineral County Sherriffs office to build a system that capable of reliable use by the public and for Search and Rescue (SAR) operations.  The coverage area will be from Mineral County into Rio Grande County, parts of Hinsdale County and other surrounding areas.  In a later post I will include a coverage map.
+I have been working closely with the Mineral County Sheriffs office to build a system that is capable of reliable use by the public and for Search and Rescue (SAR) operations.  The coverage area will be from Mineral County into Rio Grande County, parts of Hinsdale County and other surrounding areas.  In a later post I will include a coverage map.
 
 I have not included details about the feedlines in this post, suffice it to say that I am hoping to get feedline for both the UHF and VHF side donated from the [Cheyenne Mountain Repeater Group](http://www.cmrg.org) in the form of 1/2" and 7/8" [heliax](https://en.wikipedia.org/wiki/Coaxial_cable).
 
