@@ -116,7 +116,7 @@ Turn *EVERY* relay on:
 {% highlight python %}#!/usr/bin/python
 import RPi.GPIO as GPIO
 
-relay_pins = {'one': 12, 'two':16, 'three':18, 'four':22}
+relay_pins = {'one':18, 'two':23, 'three':24, 'four':25}
 
 GPIO.setmode(GPIO.BOARD)  # use P1 header pin numbering convention
 GPIO.setwarnings(False)   # don't want to hear about how pins are already in use
@@ -129,7 +129,7 @@ Turn *EVERY* relay off:
 {% highlight python %}#!/usr/bin/python
 import RPi.GPIO as GPIO
 
-relay_pins = {'one': 12, 'two':16, 'three':18, 'four':22}
+relay_pins = {'one':18, 'two':23, 'three':24, 'four':25}
 
 GPIO.setmode(GPIO.BOARD)  # use P1 header pin numbering convention
 GPIO.setwarnings(False)   # don't want to hear about how pins are already in use
