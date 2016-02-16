@@ -52,6 +52,7 @@ Before connecting the breadboard jumpers you need to know where you are going to
 To keep things tidy and in-line I made use of the GPIO pins on the right side of the RasPi. The relay board requires 5V to operate the relay coils so the first pin to use is the top right, followed by the ground and then the _Green_ GPIO pins: 18,23,24 and 25. Following are the _random_ colors that I used and their respective pins.
 
  RasPi Pinout
+
 * (Blue) 5v
 * (Brown) Ground
 * (Red) GPIO18
@@ -60,7 +61,8 @@ To keep things tidy and in-line I made use of the GPIO pins on the right side of
 * (Green) GPIO25 
 [![RasPi Pinout]({{ site.baseurl | prepend:site.url}}/images/raspi_power/raspi_wiring.jpg){: .quarter-image }](/images/raspi_power/raspi_wiring.jpg)
 
- Relay Board Pinout
+Relay Board Pinout
+
 * (Blue) VCC
 * (Green) IN4
 * (Orange) IN3
