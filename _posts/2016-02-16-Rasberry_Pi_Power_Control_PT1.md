@@ -59,6 +59,7 @@ To keep things tidy and in-line I made use of the GPIO pins on the right side of
 * (Yellow) GPIO23
 * (Orange) GPIO24
 * (Green) GPIO25 
+
 [![RasPi Pinout]({{ site.baseurl | prepend:site.url}}/images/raspi_power/raspi_wiring.jpg){: .quarter-image }](/images/raspi_power/raspi_wiring.jpg)
 
 Relay Board Pinout
@@ -69,6 +70,7 @@ Relay Board Pinout
 * (Yellow) IN2
 * (Red) IN1
 * (Brown) GND
+
 [![RasPi Pinout]({{ site.baseurl | prepend:site.url}}/images/raspi_power/relay_board_wiring.jpg){: .quarter-image }](/images/raspi_power/relay_board_wiring.jpg)
 
 ### Software
