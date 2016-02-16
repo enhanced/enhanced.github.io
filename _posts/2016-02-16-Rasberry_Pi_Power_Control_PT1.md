@@ -76,7 +76,7 @@ Relay Board Pinout
 ### Software
 There are a number of languages and supporting libraries/frameworks to said languages that allow progromatic control of the RasPi GPIOs.  For the purposes of this project, I elected to use Python and the [RPi.GPIO Python library](https://pypi.python.org/pypi/RPi.GPIO).
 
->I am running Debian as my base distribution, so these steps may specific to Debian (though they shouldn't be).  Also note that as of the time that this was published the latest RPi.GPIO library was 0.6.1.  I also assume that you have the appropriate dependencies installed to build from source.
+>I am running Debian as my base distribution, so these steps may be specific to Debian (though they shouldn't be).  Also note that as of the time that this was published the latest RPi.GPIO library was 0.6.1.  I also assume that you have the appropriate dependencies installed to build from source.
  {: .note}
 
 Step 1 - Get the tarball. 
