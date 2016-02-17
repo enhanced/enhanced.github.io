@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "N0PKT Rasberry Pi Power Control Part 1.5"
-date: 2016-02-17 00:00:00
+date: 2016-02-17 06:00:00
 tags: 
  - "amateur radio"
  - repeater
