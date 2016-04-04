@@ -61,7 +61,7 @@ context=custom-gv-answer
 #### extensions.conf
 The stanza names in this section are important, this is where I broke it all for myself and then spent several days working backward to understand how stanzas and dial-plans work.  These stanza names are referred to elsewhere by *context=* and *goto* lines and this is what comprises the logic flow, in a simplistic way.
 
-There will be only two stanzas that we will add, the [pstn-out] is referred to in a few other spots and so must retain its name *or change it everywhere that it is called in extensions.conf*.  The other is [custom-gv-answer] and simply must match the *context=* line that is in the sip.conf.
+There will be only two stanzas that we will add, the [pstn-out] is referred to in a few other spots and so must retain its name *or change it everywhere that it is called in extensions.conf*.  The other is [custom-gv-answer] and simply must match the *context=* line that is in the STANZAREFERECE stanza within sip.conf.
 
 [pstn-out] *autopatch*
 
