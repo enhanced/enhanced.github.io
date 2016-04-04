@@ -54,7 +54,8 @@ allowexternaldomains=yes
 context=custom-gv-answer
 {% endhighlight text %}
 
->Also note that *chan_sip.so* needs to be set to load in your modules.conf {: .note}
+>Also note that *chan_sip.so* needs to be set to load in your modules.conf
+{: .note}
 
 #### extensions.conf
 The stanza names in this section are important, this is where I broke it all for myself and then spent several days working backward to understand how stanzas and dial-plans work.  These stanza names are referred to elsewhere by *context=* and *goto* lines and this is what comprises the logic flow, in a simplistic way.
