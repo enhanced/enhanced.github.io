@@ -28,6 +28,7 @@ Register example:
 * ACCOUNT is the account user from simonics GV Gateway
 * PASSWORD is the password for this user
 * STANZAREFERENCE refers to the stanza detailed below
+* NODE referse to YOUR Allstar node number
 {% highlight text %}
 register=ACCOUNT:PASSWORD@STANZAREFERENCE/NODE
 {% endhighlight text %}
@@ -99,7 +100,8 @@ context => parkedcalls          ; Which context parked calls are in
 {% endhighlight text %}
 
 #### modules.conf
-Make sure that *app_parkandannounce.so* and *chan_sip.so* are set to load.
+>Make sure that *app_parkandannounce.so* and *chan_sip.so* are set to load.
+{: .note}
 
 ### Putting it all together
 Assuming all of your configuration is good and you are registering with the gateway as a SIP peer, reverse and forward autopatch should work using whatever autopatchup and autopatchdn DTMF function is defined in your *rpt.conf*  Mine are defined as:
