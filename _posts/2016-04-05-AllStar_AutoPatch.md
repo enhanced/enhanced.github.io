@@ -54,7 +54,8 @@ allowexternaldomains=yes
 context=custom-gv-answer
 {% endhighlight text %}
 
-Also note that *chan_sip.so* needs to be set to load in your modules.conf
+ Also note that *chan_sip.so* needs to be set to load in your modules.conf
+ {: .note}
 
 #### extensions.conf
 The stanza names in this section are important, this is where I broke it all for myself and then spent several days working backward to understand how stanzas and dial-plans work.  These stanza names are referred to elsewhere by *context=* and *goto* lines and this is what comprises the logic flow, in a simplistic way.
@@ -98,7 +99,7 @@ context => parkedcalls          ; Which context parked calls are in
 {% endhighlight text %}
 
 #### modules.conf
-Simply make sure that *app_parkandannounce.so* is set to load.
+Make sure that *app_parkandannounce.so* and *chan_sip.so* are set to load.
 
 ### Putting it all together
 Assuming all of your configuration is good and you are registering with the gateway as a SIP peer, reverse and forward autopatch should work using whatever autopatchup and autopatchdn DTMF function is defined in your *rpt.conf*  Mine are defined as:
