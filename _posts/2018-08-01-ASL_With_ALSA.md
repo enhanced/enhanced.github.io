@@ -30,7 +30,8 @@ Again, the good news here is that you can run current kernels without trudging t
 
 Before we dive into it to far, I want to make note of a few current caveats.  Firstly I have not found a way to make OSSPD work properly with pulse running as a system wide service (if you don't know what I'm talking about, I suggest RTFM or move on).  Secondly, I have not been able to successfully get Pulse to run as a daemon using systemctl, there are issues because when you do it this way pulse expects a window manager and we don't want that overhead on the system IMHO....  So what this means is that unfortunately at this time (I'm working on a solution) when a system reboots the user needs to ssh into the box and manually do a few things.
 
-If anyone gets pulse running correctly at startup, I'm all ears and will happily publish the info!
+>If anyone gets pulse running correctly at startup, I'm all ears and will happily publish the info!
+{: .note}
 
 Yes, I did try fairly exhaustively to use AOSS and ALSA-OSPD but was never able to make it work, so if you are so inclined please feel free because if we can eliminate Pulse from the equation it would simplify things a bit.  Of course having pulse in there gives us a lot of other capabilities.. so there is a tradeoff I suppose.
 
