@@ -1,0 +1,322 @@
+
+  
+
+
+
+
+
+
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>enhanced things | AllStar using Alsa and Pulseaudio instead of OSS </title>
+  <meta name="theme-color" content="#222222" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/assets/js/jquery.min.js"></script>
+  <script src="/assets/js/bootstrap.min.js"></script>
+  <script src="/assets/js/header.js"></script>
+  <script src="/assets/js/toc.js"></script>
+  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <link href="/assets/css/syntax.css" rel="stylesheet">
+  <link href="/assets/css/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-73891355-1`']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+  
+
+
+ <script type="text/javascript">
+  WebFontConfig = {
+    google: {
+      families: ['Ubuntu::latin']
+    }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">enhanced things</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/">/home</a></li>
+          <li><a href="/archive.html">/archive</a></li>
+          <li><a href="/tags.html">/tags</a></li>
+          <li><a href="/about.html">/about</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+    <div class="wrapper">
+      <div class="content">
+        <div class="container container-center">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="article">
+                <div class="well">
+                  <h1><a href="/2018/08/ALS_With_ALSA">AllStar using Alsa and Pulseaudio instead of OSS</a></h1>
+                  <div class="post-meta">
+                    <div class="post-time">
+                      <i class="fa fa-calendar"></i>
+                      <time>01 Aug 2018</time>
+                    </div>
+                    <ul>
+                      
+                        <li><a href="/tag/amateur%20radio">amateur radio</a></li>
+                      
+                        <li><a href="/tag/repeater">repeater</a></li>
+                      
+                        <li><a href="/tag/n0pkt">n0pkt</a></li>
+                      
+                        <li><a href="/tag/rasberry%20pi">rasberry pi</a></li>
+                      
+                        <li><a href="/tag/OSS">OSS</a></li>
+                      
+                        <li><a href="/tag/electronics">electronics</a></li>
+                      
+                        <li><a href="/tag/PulseAudio">PulseAudio</a></li>
+                      
+                        <li><a href="/tag/Alsa">Alsa</a></li>
+                      
+                        <li><a href="/tag/URIx">URIx</a></li>
+                      
+                    </ul>
+                  </div>
+                  <div class="post-content">
+                    <div id="toc" class="toc"></div>
+                    <h2 id="asl-with-no-oss-kernel-module-since-its-now-marked-as-broken-and-has-been-deprecated-for-10-years">ASL with no OSS Kernel Module (since it’s now marked as <em>broken</em> and has been deprecated for <em>10</em> years)</h2>
+
+<p>This is the process that I used to facilitate the <em>“emulation”</em> of OSS <code class="highlighter-rouge">/dev/dsp1</code> using <a href="https://www.alsa-project.org/main/index.php/Main_Page">ALSA</a>, <a href="https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Community/">PulseAudio</a> and <a href="https://github.com/libfuse/osspd">OSSPD</a>.</p>
+
+<p>Below you will find basic guidelines and what I edited in order to allow ASL to function with a <em>CURRENT</em> kernel on raspbian.  This document makes a few assumptions:</p>
+<ol>
+  <li>You know how to use an editor, of your choice, in the shell of your choice.</li>
+  <li>You have ASL in a state where it will at least start up with the <em>CURRENT</em> kernel.. <em>i.e. you built and installed the required dahdi modules from source</em></li>
+  <li>You know how to install applications on whatever distribution that you happen to be running</li>
+</ol>
+
+<h3 id="caveats">Caveats</h3>
+
+<p>Before we dive into it to far, I want to make note of a few current caveats.  Firstly I have not found a way to make OSSPD work properly with pulse running as a system wide service (if you don’t know what I’m talking about, I suggest RTFM or move on).  Secondly, I have not been able to successfully get Pulse to run as a daemon using systemctl, there are issues because when you do it this way pulse expects a window manager and we don’t want that overhead on the system IMHO….  So what this means is that unfortunately at this time (I’m working on a solution) when a system reboots the user needs to ssh into the box and manually do a few things.</p>
+
+<p>Yes, I did try fairly exhaustively to use AOSS and ALSA-OSPD but was never able to make it work, so if you are so inclined please feel free because if we can eliminate Pulse from the equation it would simplify things a bit.  Of course having pulse in there gives us a lot of other capabilities.. so there is a tradeoff I suppose.</p>
+
+<h3 id="basic-steps-outline">Basic Steps Outline</h3>
+<ol>
+  <li><strong>OPTIONAL</strong> Disable the onboard audio (for Pi 3 etc…) unless you have an explicit reason to have it..<br />
+ 	* Edit /lib/modprobe.d/raspi-blacklist.conf and add <code class="highlighter-rouge">blacklist snd_bcm2835</code><br />
+ 	* reboot</li>
+  <li>Determine hardware location(s) (run all as root unless otherwise noted)<br />
+ 	* lsusb (look for C-Media Electronics, Inc) to be sure it’s even listed (your URI)<br />
+ 	* aplay -l (make note of the card # associated with the USB PnP Sound Device)</li>
+  <li>Edit /usr/share/alsa/alsa.conf to make the URI (USB Device) the default
+    <ul>
+      <li>find defaults.ctl.card and defaults.pcm.card<br />
+ 		- their default value is 0, change this to the # value identified in step 1 using the aplay -l command<br />
+ 5: Reboot<br />
+ 6: Install OSSPD<br />
+ 7: A few more edits<br />
+ 8: Service restarts<br />
+ 9: Audio should now work via alsa, pulse and aoss</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="slightly-more-detail">Slightly more detail</h3>
+
+<p>These are the exact steps that I took to emulate OSS.  Please remember to check logs files if you are experiencing things that you don’t expect, they usually contain information that will help with the troubleshooting process.</p>
+
+<ol>
+  <li>edit /etc/pulse/daemon.conf changing the following lines to read as noted
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>default-sample-rate = 48000
+default-fragments = 5
+default-fragment-size-msec = 2
+</code></pre></div>    </div>
+  </li>
+  <li>edit /usr/share/alsa/alsa.conf changing the following lines to read as noted
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>defaults.ctl.card 1 #card number from aplay -l
+defaults.pcm.card 1 #card number from aplay -l
+</code></pre></div>    </div>
+  </li>
+  <li>edit /etc/pulse/default.pa changing the following lines to read as noted
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>load-module module-alsa-source device=hw:1,0 #device number specified in alsa.conf from aplay -l
+load-module module-udev-detect tsched=0 ignore_dB=1
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>reboot</p>
+  </li>
+  <li>install osspd and execute the following after install
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo systemctl stop osspd.service
+</code></pre></div>    </div>
+  </li>
+  <li>edit /lib/systemd/system/osspd.service and change the ExecStart line as noted
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ExecStart=/usr/sbin/osspd -f --dsp-slave=/usr/lib/osspd/ossp-padsp --adsp=dsp1
+</code></pre></div>    </div>
+  </li>
+  <li>execute the following commands to restart services etc…
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo systemctl daemon-reload
+sudo pulseaudio --start
+sudo systemctl start osspd.service
+sudo systemctl restart asterisk.service
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h2 id="some-additional-resources">Some additional resources:</h2>
+<p>https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting<br />
+https://github.com/libfuse/osspd<br />
+https://www.alsa-project.org/main/index.php/Main_Page</p>
+
+                    
+
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 hidden-xs">
+              <div class="sidebar ">
+  <h2>Recent Posts</h2>
+  <ul>
+    
+    <li><a href="/2018/08/ALS_With_ALSA">AllStar using Alsa and Pulseaudio instead of OSS</a></li>
+    
+    <li><a href="/2016/04/AllStar_AutoPatch">Setting up AutoPatch and Reverse AutoPatch</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1_5">N0PKT Rasberry Pi Power Control Part 1.5</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1">N0PKT Rasberry Pi Power Control Part 1</a></li>
+    
+    <li><a href="/2016/02/Bristol-Buildout">N0PKT Initial Bristol Head Buildout Notes</a></li>
+    
+  </ul>
+</div>
+
+<div class="sidebar">
+  <h2>Tags</h2>
+  <ul class="sideBarTags">
+    
+    
+    <li>
+      <a href="/tag/APRS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>APRS</span></a></li>
+    
+    <li>
+      <a href="/tag/Alsa" data-toggle="tooltip" data-placement="right" title="1">
+        <span>Alsa</span></a></li>
+    
+    <li>
+      <a href="/tag/OSS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>OSS</span></a></li>
+    
+    <li>
+      <a href="/tag/PulseAudio" data-toggle="tooltip" data-placement="right" title="1">
+        <span>PulseAudio</span></a></li>
+    
+    <li>
+      <a href="/tag/URIx" data-toggle="tooltip" data-placement="right" title="1">
+        <span>URIx</span></a></li>
+    
+    <li>
+      <a href="/tag/amateur%20radio" data-toggle="tooltip" data-placement="right" title="5">
+        <span>amateur radio</span></a></li>
+    
+    <li>
+      <a href="/tag/electronics" data-toggle="tooltip" data-placement="right" title="5">
+        <span>electronics</span></a></li>
+    
+    <li>
+      <a href="/tag/n0pkt" data-toggle="tooltip" data-placement="right" title="5">
+        <span>n0pkt</span></a></li>
+    
+    <li>
+      <a href="/tag/rasberry%20pi" data-toggle="tooltip" data-placement="right" title="5">
+        <span>rasberry pi</span></a></li>
+    
+    <li>
+      <a href="/tag/repeater" data-toggle="tooltip" data-placement="right" title="5">
+        <span>repeater</span></a></li>
+    
+  </ul>
+</div>
+
+            </div>
+          </div>
+        </div>
+        
+
+      </div>
+          <footer class="footer-distributed">
+      <div class="container">
+        <div class="footer">
+          <p> &copy; </p>
+          <h6>Follow me</h6>
+
+<ul class="social-media">
+
+  
+    <li>
+      <a title="enhanced on Github" href="https://github.com/enhanced" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    </li>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <li>
+      <a title="feed.xml RSS" href="/feed.xml" target="_blank"><i class="fa fa-rss fa-2x"></i></a>
+    </li>
+  
+
+</ul>
+
+        </div>
+      </div>
+    </footer>
+
+    </div>
+  </body>
+</html>

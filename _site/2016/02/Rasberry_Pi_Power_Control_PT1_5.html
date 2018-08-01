@@ -1,0 +1,341 @@
+
+  
+
+
+
+
+
+
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>enhanced things | N0PKT Rasberry Pi Power Control Part 1.5 </title>
+  <meta name="theme-color" content="#222222" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/assets/js/jquery.min.js"></script>
+  <script src="/assets/js/bootstrap.min.js"></script>
+  <script src="/assets/js/header.js"></script>
+  <script src="/assets/js/toc.js"></script>
+  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <link href="/assets/css/syntax.css" rel="stylesheet">
+  <link href="/assets/css/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-73891355-1`']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+  
+
+
+ <script type="text/javascript">
+  WebFontConfig = {
+    google: {
+      families: ['Ubuntu::latin']
+    }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">enhanced things</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/">/home</a></li>
+          <li><a href="/archive.html">/archive</a></li>
+          <li><a href="/tags.html">/tags</a></li>
+          <li><a href="/about.html">/about</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+    <div class="wrapper">
+      <div class="content">
+        <div class="container container-center">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="article">
+                <div class="well">
+                  <h1><a href="/2016/02/Rasberry_Pi_Power_Control_PT1_5">N0PKT Rasberry Pi Power Control Part 1.5</a></h1>
+                  <div class="post-meta">
+                    <div class="post-time">
+                      <i class="fa fa-calendar"></i>
+                      <time>16 Feb 2016</time>
+                    </div>
+                    <ul>
+                      
+                        <li><a href="/tag/amateur%20radio">amateur radio</a></li>
+                      
+                        <li><a href="/tag/repeater">repeater</a></li>
+                      
+                        <li><a href="/tag/n0pkt">n0pkt</a></li>
+                      
+                        <li><a href="/tag/rasberry%20pi">rasberry pi</a></li>
+                      
+                        <li><a href="/tag/electronics">electronics</a></li>
+                      
+                    </ul>
+                  </div>
+                  <div class="post-content">
+                    <div id="toc" class="toc"></div>
+                    <h2 id="what-this-post-is-all-about">What this post is all about</h2>
+<p>This is a minor update to yesterdays post.  After I had done my testing and written the post I decided to look for better ways to control the GPIOs without requiring that the executing user run the commands as <em>ROOT</em>.  Through the magic that is google I stumbled upon the <a href="http://abyz.co.uk/rpi/pigpio/index.html">pigpio set of libraries and utilities</a>.</p>
+
+<h3 id="software">Software</h3>
+<p>In the previous post I detailed the usage of the Python RPi.GPIO library.  However, I was pretty dissatisfied with the fact that the Python needed to be executed with <em>ROOT</em> permissions, as this causes a significant security risk.  As noted above: a bit of googling produced the fruitful <a href="http://abyz.co.uk/rpi/pigpio/index.html">pigpio</a>.  The benefit of pigpio (other than the fact that it’s cleaner) is that your python itself will no longer have to run under a root context.  There will be a daemon (still running under a root context) that will accept commands via socket.  In this way you can also <em>remotely</em> control GPIOs on other RasPis.</p>
+
+<blockquote class="note">
+  <p>I am running Debian as my base distribution, so these steps may be specific to Debian (though they shouldn’t be). I also assume that you have the appropriate dependencies installed to build from source.</p>
+</blockquote>
+
+<p>Step 1 - Get the tarball and install.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">wget abyz.co.uk/rpi/pigpio/pigpio.zip
+unzip pigpio.zip
+<span class="nb">cd </span>PIGPIO
+make
+<span class="nb">sudo </span>make <span class="nb">install
+sudo </span>python setup.py <span class="nb">install</span></code></pre></figure>
+
+<blockquote class="note">
+  <p>This is compiling on a RasPi, so keep in mind that it may take several minutes to build - don’t panic!</p>
+</blockquote>
+
+<h3 id="code-and-initial-testing">Code and Initial Testing</h3>
+<p>Some minor changes to test the boards in this section - everything other than the code is going to be similar.</p>
+
+<p>Launch the daemon that controlls the GPIOs:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>pigpiod
+ps aux | <span class="nb">grep </span>pigpiod
+root     17722  5.6  0.1  10864  1288 ?        SLsl Feb16  54:49 pigpiod</code></pre></figure>
+
+<p>Quick Test - Launch a Pyton interactive shell (NOT AS ROOT) and issue some verification and testing commands.  By issuing the following commands, assuming you are using the same RasPi and Relay Board as I am, you should see the LED and hear relay1 (IN1) physically switch over to the NO position when you set output to LOW and back to NC when you swithc to HIGH.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="err">$</span> <span class="n">python</span>
+<span class="n">Python</span> <span class="mf">2.7</span><span class="o">.</span><span class="mi">9</span> <span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">Mar</span>  <span class="mi">1</span> <span class="mi">2015</span><span class="p">,</span> <span class="mi">13</span><span class="p">:</span><span class="mi">48</span><span class="p">:</span><span class="mi">22</span><span class="p">)</span>
+<span class="p">[</span><span class="n">GCC</span> <span class="mf">4.9</span><span class="o">.</span><span class="mi">2</span><span class="p">]</span> <span class="n">on</span> <span class="n">linux2</span>
+<span class="n">Type</span> <span class="s">"help"</span><span class="p">,</span> <span class="s">"copyright"</span><span class="p">,</span> <span class="s">"credits"</span> <span class="ow">or</span> <span class="s">"license"</span> <span class="k">for</span> <span class="n">more</span> <span class="n">information</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">pigpio</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">p1</span> <span class="o">=</span> <span class="n">pigpio</span><span class="o">.</span><span class="n">pi</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">p1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="il">0L</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">p1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="il">0L</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">exit</span><span class="p">()</span></code></pre></figure>
+
+<blockquote class="note">
+  <p>You can also see that there is a response from issuing these commands, useful for error handling etc…</p>
+</blockquote>
+
+<p>I mentioned that this specific setup operates in reverse of what I expected.  Normally, or normally according to google searches, <em>OBJ.write(18,0)</em> will turn <em>OFF</em> the relay.  However, in the case of the noted relay board and raspi model it activates the NO side of the relay.  Here are a few scripts that I took from <a href="https://github.com/fixedd/RPi_Relay_Interface">GitHub</a> and modified to work with this specific library, daemon, wiring and board model(s).</p>
+
+<p>Turn <em>EVERY</em> relay on:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">pigpio</span>
+
+<span class="n">relay_pins</span> <span class="o">=</span> <span class="p">{</span><span class="s">'one'</span><span class="p">:</span><span class="mi">18</span><span class="p">,</span> <span class="s">'two'</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span> <span class="s">'three'</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span> <span class="s">'four'</span><span class="p">:</span><span class="mi">25</span><span class="p">}</span>
+<span class="n">pi1</span> <span class="o">=</span> <span class="n">pigpio</span><span class="o">.</span><span class="n">pi</span><span class="p">()</span> <span class="c"># initialize a local pi object</span>
+
+<span class="k">for</span> <span class="n">relay_pin</span><span class="p">,</span> <span class="n">board_pin</span> <span class="ow">in</span> <span class="n">relay_pins</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">pi1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c"># Set output to low </span></code></pre></figure>
+
+<p>Turn <em>EVERY</em> relay off:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">pigpio</span>
+
+<span class="n">relay_pins</span> <span class="o">=</span> <span class="p">{</span><span class="s">'one'</span><span class="p">:</span><span class="mi">18</span><span class="p">,</span> <span class="s">'two'</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span> <span class="s">'three'</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span> <span class="s">'four'</span><span class="p">:</span><span class="mi">25</span><span class="p">}</span>
+<span class="n">pi1</span> <span class="o">=</span> <span class="n">pigpio</span><span class="o">.</span><span class="n">pi</span><span class="p">()</span> <span class="c"># initialize a local pi object</span>
+
+<span class="k">for</span> <span class="n">relay_pin</span><span class="p">,</span> <span class="n">board_pin</span> <span class="ow">in</span> <span class="n">relay_pins</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">pi1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c"># Set output to high</span></code></pre></figure>
+
+<p>Cycle through 18,23,24,25 in a cylon style, ending with all in NC position:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">pigpio</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">sleep_time</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+<span class="c"># Define what pins we will be using, this is always using BCM when we use pigpio</span>
+<span class="n">relay_pins</span> <span class="o">=</span> <span class="p">{</span><span class="s">'one'</span><span class="p">:</span><span class="mi">18</span><span class="p">,</span> <span class="s">'two'</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span> <span class="s">'three'</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span> <span class="s">'four'</span><span class="p">:</span><span class="mi">25</span><span class="p">}</span>
+
+<span class="c"># Create an object referencing a local Pi</span>
+<span class="n">pi1</span> <span class="o">-</span> <span class="n">pigpio</span><span class="o">.</span><span class="n">pi</span><span class="p">()</span>
+
+<span class="c"># Function to turn off and on the GPIOs</span>
+<span class="k">def</span> <span class="nf">float_pin</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="n">on</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">on</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="n">pi1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">on</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">off</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="n">pi1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">);</span>
+
+<span class="c"># Iterate trough each of the relay pins cycling on and off looking all cylon!</span>
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="bp">None</span>               <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">])</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">],</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'four'</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'four'</span><span class="p">]</span> <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">])</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">],</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">,</span> <span class="bp">None</span>               <span class="p">)</span></code></pre></figure>
+
+<h3 id="final-thoughts">Final Thoughts</h3>
+<p>Even with setups like this in potentially closed systems one should have security and extensibility kept well in-mind.</p>
+
+                    
+
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 hidden-xs">
+              <div class="sidebar ">
+  <h2>Recent Posts</h2>
+  <ul>
+    
+    <li><a href="/2018/08/ALS_With_ALSA">AllStar using Alsa and Pulseaudio instead of OSS</a></li>
+    
+    <li><a href="/2016/04/AllStar_AutoPatch">Setting up AutoPatch and Reverse AutoPatch</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1_5">N0PKT Rasberry Pi Power Control Part 1.5</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1">N0PKT Rasberry Pi Power Control Part 1</a></li>
+    
+    <li><a href="/2016/02/Bristol-Buildout">N0PKT Initial Bristol Head Buildout Notes</a></li>
+    
+  </ul>
+</div>
+
+<div class="sidebar">
+  <h2>Tags</h2>
+  <ul class="sideBarTags">
+    
+    
+    <li>
+      <a href="/tag/APRS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>APRS</span></a></li>
+    
+    <li>
+      <a href="/tag/Alsa" data-toggle="tooltip" data-placement="right" title="1">
+        <span>Alsa</span></a></li>
+    
+    <li>
+      <a href="/tag/OSS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>OSS</span></a></li>
+    
+    <li>
+      <a href="/tag/PulseAudio" data-toggle="tooltip" data-placement="right" title="1">
+        <span>PulseAudio</span></a></li>
+    
+    <li>
+      <a href="/tag/URIx" data-toggle="tooltip" data-placement="right" title="1">
+        <span>URIx</span></a></li>
+    
+    <li>
+      <a href="/tag/amateur%20radio" data-toggle="tooltip" data-placement="right" title="5">
+        <span>amateur radio</span></a></li>
+    
+    <li>
+      <a href="/tag/electronics" data-toggle="tooltip" data-placement="right" title="5">
+        <span>electronics</span></a></li>
+    
+    <li>
+      <a href="/tag/n0pkt" data-toggle="tooltip" data-placement="right" title="5">
+        <span>n0pkt</span></a></li>
+    
+    <li>
+      <a href="/tag/rasberry%20pi" data-toggle="tooltip" data-placement="right" title="5">
+        <span>rasberry pi</span></a></li>
+    
+    <li>
+      <a href="/tag/repeater" data-toggle="tooltip" data-placement="right" title="5">
+        <span>repeater</span></a></li>
+    
+  </ul>
+</div>
+
+            </div>
+          </div>
+        </div>
+        
+
+      </div>
+          <footer class="footer-distributed">
+      <div class="container">
+        <div class="footer">
+          <p> &copy; </p>
+          <h6>Follow me</h6>
+
+<ul class="social-media">
+
+  
+    <li>
+      <a title="enhanced on Github" href="https://github.com/enhanced" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    </li>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <li>
+      <a title="feed.xml RSS" href="/feed.xml" target="_blank"><i class="fa fa-rss fa-2x"></i></a>
+    </li>
+  
+
+</ul>
+
+        </div>
+      </div>
+    </footer>
+
+    </div>
+  </body>
+</html>

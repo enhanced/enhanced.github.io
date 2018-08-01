@@ -1,0 +1,352 @@
+
+  
+
+
+
+
+
+
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>enhanced things | Setting up AutoPatch and Reverse AutoPatch </title>
+  <meta name="theme-color" content="#222222" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/assets/js/jquery.min.js"></script>
+  <script src="/assets/js/bootstrap.min.js"></script>
+  <script src="/assets/js/header.js"></script>
+  <script src="/assets/js/toc.js"></script>
+  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <link href="/assets/css/syntax.css" rel="stylesheet">
+  <link href="/assets/css/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-73891355-1`']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+  
+
+
+ <script type="text/javascript">
+  WebFontConfig = {
+    google: {
+      families: ['Ubuntu::latin']
+    }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">enhanced things</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/">/home</a></li>
+          <li><a href="/archive.html">/archive</a></li>
+          <li><a href="/tags.html">/tags</a></li>
+          <li><a href="/about.html">/about</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+    <div class="wrapper">
+      <div class="content">
+        <div class="container container-center">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="article">
+                <div class="well">
+                  <h1><a href="/2016/04/AllStar_AutoPatch">Setting up AutoPatch and Reverse AutoPatch</a></h1>
+                  <div class="post-meta">
+                    <div class="post-time">
+                      <i class="fa fa-calendar"></i>
+                      <time>03 Apr 2016</time>
+                    </div>
+                    <ul>
+                      
+                        <li><a href="/tag/amateur%20radio">amateur radio</a></li>
+                      
+                        <li><a href="/tag/repeater">repeater</a></li>
+                      
+                        <li><a href="/tag/n0pkt">n0pkt</a></li>
+                      
+                        <li><a href="/tag/rasberry%20pi">rasberry pi</a></li>
+                      
+                        <li><a href="/tag/electronics">electronics</a></li>
+                      
+                    </ul>
+                  </div>
+                  <div class="post-content">
+                    <div id="toc" class="toc"></div>
+                    <h2 id="documentation-and-understanding">Documentation and Understanding</h2>
+<p>I am hoping that someone finds this post as useful as I might have.  Setting up the reverse autopatch was possibly the most difficult (or frustrating) part of this entire repeater project thus far.  One thing that I hope to help rectify going forward is the sparse documentation that exists for the <a href="http://www.allstarlin.org">AllStar project</a>.  Please note that I am not trying to disparage the amazing work that Jim and the rest of the team have done, I certainly understand that they put a substantial amount of effort and development in to get the projet to where it is.  Rather, I am noting that this is my meager contribution in return and that ideally I will contribute more back to the project.</p>
+
+<h2 id="the-nuts-and-bolts">The Nuts and Bolts</h2>
+<p>This post is intended to be a quick and dirty (how I did it) guide, with a little explanation along the way, of how to get autopatch and reverse autopatch functioning.  In order to get this working I took a good while (few days) putting together a basic grasp on how asterisk <a href="https://wiki.asterisk.org/wiki/display/AST/Creating+Dialplan+Extensions">dial-plans</a> and their logic flow works.  You will find that the <a href="http://docs.allstarlink.org/drupal/node/24">stanza</a> sections will refer <em>via goto</em> statements to other stanzas and the like.  My mistake was that I changed names and made my own stanzas before I understood how it all tied together <strong>FACEPALM</strong></p>
+
+<h3 id="autopatch-and-in-reverse">Autopatch <em>And in Reverse</em></h3>
+<p>For my configuration I used a Google Voice account without any Credit Card or payment info attached so that I didn’t have to worry about toll fraud.  I also used a service that acts as a SIP gateway to Google Voice.  Information about the gateway that I used can be found at <a href="https://simonics.com/services/">https://simonics.com/services/</a>.  I elected to us this service rather than setting up my own gateway simply to reduce the complexity of what would need to be maintained going forward.  There are other options out there, and a bit of googling should get you sorted.</p>
+
+<h4 id="sipconf">sip.conf</h4>
+<p>There are two components that need to go into the <em>sip.conf</em> file.  One is the register line, and the other will be the stanza that the register line refers back to.  This will be the configuration that allows us to both receive and place calls via our SIP peer.</p>
+
+<p>Register example:</p>
+
+<ul>
+  <li>ACCOUNT is the account user from simonics GV Gateway</li>
+  <li>PASSWORD is the password for this user</li>
+  <li>STANZAREFERENCE refers to the stanza detailed below</li>
+  <li>NODE referse to YOUR Allstar node number</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">register=ACCOUNT:PASSWORD@STANZAREFERENCE/NODE</code></pre></figure>
+
+<p>Stanza example:</p>
+
+<ul>
+  <li>ACCOUNT is the account user from simonics GV Gateway</li>
+  <li>PASSWORD is the password for this user</li>
+  <li>Make note of the “context” value - we will use it later</li>
+  <li>There may be some options that are not needed, but these are what I used to make it happen, YMMV</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">[STANZAREFERECE]
+type=peer
+allowguest=yes
+nat=yes
+autocreatepeer=yes
+insecure=port,invite
+username=ACCOUNT
+secret=PASSWORD
+host=gvgw.simonics.com
+qualify=no
+allow=ulaw
+allowexternaldomains=yes
+context=custom-gv-answer</code></pre></figure>
+
+<blockquote class="note">
+  <p>Also note that <em>chan_sip.so</em> needs to be set to load in your modules.conf</p>
+</blockquote>
+
+<h4 id="extensionsconf">extensions.conf</h4>
+<p>The stanza names in this section are important, this is where I broke it all for myself and then spent several days working backward to understand how stanzas and dial-plans work.  These stanza names are referred to elsewhere by <em>context=</em> and <em>goto</em> lines and this is what comprises the logic flow, in a simplistic way.</p>
+
+<p>There will be only two stanzas that we will add, the [pstn-out] is referred to in a few other spots and so must retain its name <em>or change it everywhere that it is called in extensions.conf</em>.  The other is [custom-gv-answer] and simply must match the <em>context=</em> line that is in the STANZAREFERECE stanza within sip.conf.</p>
+
+<p>[pstn-out] <em>autopatch</em></p>
+
+<ul>
+  <li>STANZAREFERENCE refers back to the same name in sip.conf
+    <ul>
+      <li>This tells asterisk where to send a call matching the NXXNXXXXX pattern for autopatch calls</li>
+    </ul>
+  </li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">[pstn-out]
+exten =&gt; _NXXNXXXXXX,1,Dial(SIP/STANZAREFERENCE/\${EXTEN})
+exten =&gt; _NXXNXXXXXX,2,Congestion</code></pre></figure>
+
+<p>[custom-gv-answer] <em>reverse autopatch</em></p>
+
+<ul>
+  <li>MYNODE is your Allstar node number, this is important</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">[custom-gv-answer]
+exten =&gt; _X.,1,Ringing
+exten =&gt; _X.,n,Answer()
+exten =&gt; _X.,n,Rpt(MYNODE|Rrpt/node:NODE:rpt/in-call:digits/0:PARKED|120) 75
+exten =&gt; _X.,n,Hangup</code></pre></figure>
+
+<h4 id="featuresconf">features.conf</h4>
+<p>This file should look like this by default, but just in case.  This is what tells asterisk what slots to put the calls in, starting at 701.</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">;
+; Sample Call Features (parking, transfer, etc) configuration
+;
+
+[general]
+parkext =&gt; 700                  ; What extension to dial to park
+parkpos =&gt; 701-720              ; What extensions to park calls on. These needs to be
+                                ; numeric, as Asterisk starts from the start position
+                                ; and increments with one for the next parked call.
+context =&gt; parkedcalls          ; Which context parked calls are in</code></pre></figure>
+
+<h4 id="modulesconf">modules.conf</h4>
+<blockquote class="note">
+  <p>Make sure that <em>app_parkandannounce.so</em> and <em>chan_sip.so</em> are set to load.</p>
+</blockquote>
+
+<h3 id="putting-it-all-together">Putting it all together</h3>
+<p>Assuming all of your configuration is good and you are registering with the gateway as a SIP peer, reverse and forward autopatch should work using whatever autopatchup and autopatchdn DTMF function is defined in your <em>rpt.conf</em>  Mine are defined as:</p>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">6 = autopatchup,noct = 1,farenddisconnect = 1,dialtime = 20000  ; Autopatch up
+0 = autopatchdn                                                 ; Autopatch down</code></pre></figure>
+
+<p>Given this <em>and reloading asterisk</em> I can key and press *6 on my HT and hear a dialtone, at that point I can key again and dial the 10 or 11 digit phone number that I want to call and shazaaam it should work. To hangup a simple key *0 will get it done.</p>
+
+<p>To receive a all, you should be able to call your GV number, the repeater will then announce that an incoming call is occurring and tell you the extension (default is 0701), in that case *60701 will pick the call up from park and *0 again to disconnect and hang up</p>
+
+<h3 id="a-few-fun-notes">A few fun notes</h3>
+<p>Asterisk provides some pretty solid debugging (sometimes more and sometimes less than you need).  Make use of them:</p>
+
+<ul>
+  <li>core set verbose 4</li>
+  <li>sip set verbose 4</li>
+</ul>
+
+<p>And with that, I’ll bid you all 73s!</p>
+
+<p>N0PKT</p>
+
+                    
+
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 hidden-xs">
+              <div class="sidebar ">
+  <h2>Recent Posts</h2>
+  <ul>
+    
+    <li><a href="/2018/08/ALS_With_ALSA">AllStar using Alsa and Pulseaudio instead of OSS</a></li>
+    
+    <li><a href="/2016/04/AllStar_AutoPatch">Setting up AutoPatch and Reverse AutoPatch</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1_5">N0PKT Rasberry Pi Power Control Part 1.5</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1">N0PKT Rasberry Pi Power Control Part 1</a></li>
+    
+    <li><a href="/2016/02/Bristol-Buildout">N0PKT Initial Bristol Head Buildout Notes</a></li>
+    
+  </ul>
+</div>
+
+<div class="sidebar">
+  <h2>Tags</h2>
+  <ul class="sideBarTags">
+    
+    
+    <li>
+      <a href="/tag/APRS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>APRS</span></a></li>
+    
+    <li>
+      <a href="/tag/Alsa" data-toggle="tooltip" data-placement="right" title="1">
+        <span>Alsa</span></a></li>
+    
+    <li>
+      <a href="/tag/OSS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>OSS</span></a></li>
+    
+    <li>
+      <a href="/tag/PulseAudio" data-toggle="tooltip" data-placement="right" title="1">
+        <span>PulseAudio</span></a></li>
+    
+    <li>
+      <a href="/tag/URIx" data-toggle="tooltip" data-placement="right" title="1">
+        <span>URIx</span></a></li>
+    
+    <li>
+      <a href="/tag/amateur%20radio" data-toggle="tooltip" data-placement="right" title="5">
+        <span>amateur radio</span></a></li>
+    
+    <li>
+      <a href="/tag/electronics" data-toggle="tooltip" data-placement="right" title="5">
+        <span>electronics</span></a></li>
+    
+    <li>
+      <a href="/tag/n0pkt" data-toggle="tooltip" data-placement="right" title="5">
+        <span>n0pkt</span></a></li>
+    
+    <li>
+      <a href="/tag/rasberry%20pi" data-toggle="tooltip" data-placement="right" title="5">
+        <span>rasberry pi</span></a></li>
+    
+    <li>
+      <a href="/tag/repeater" data-toggle="tooltip" data-placement="right" title="5">
+        <span>repeater</span></a></li>
+    
+  </ul>
+</div>
+
+            </div>
+          </div>
+        </div>
+        
+
+      </div>
+          <footer class="footer-distributed">
+      <div class="container">
+        <div class="footer">
+          <p> &copy; </p>
+          <h6>Follow me</h6>
+
+<ul class="social-media">
+
+  
+    <li>
+      <a title="enhanced on Github" href="https://github.com/enhanced" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    </li>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <li>
+      <a title="feed.xml RSS" href="/feed.xml" target="_blank"><i class="fa fa-rss fa-2x"></i></a>
+    </li>
+  
+
+</ul>
+
+        </div>
+      </div>
+    </footer>
+
+    </div>
+  </body>
+</html>

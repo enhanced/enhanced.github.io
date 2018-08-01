@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>enhanced things</title>
+		<description>Ramblings, Code Snippets, Amateaur Radio</description>
+		<link></link>
+		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
+		
+			<item>
+				<title>AllStar using Alsa and Pulseaudio instead of OSS</title>
+				<description>&lt;h2 id=&quot;asl-with-no-oss-kernel-module-since-its-now-marked-as-broken-and-has-been-deprecated-for-10-years&quot;&gt;ASL with no OSS Kernel Module (since it’s now marked as &lt;em&gt;broken&lt;/em&gt; and has been deprecated for &lt;em&gt;10&lt;/em&gt; years)&lt;/h2&gt;
+
+&lt;p&gt;This is the process that I used to facilitate the &lt;em&gt;“emulation”&lt;/em&gt; of OSS &lt;code class=&quot;highlighter-rouge&quot;&gt;/dev/dsp1&lt;/code&gt; using &lt;a href=&quot;https://www.alsa-project.org/main/index.php/Main_Page&quot;&gt;ALSA&lt;/a&gt;, &lt;a href=&quot;https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Community/&quot;&gt;PulseAudio&lt;/a&gt; and &lt;a href=&quot;https://github.com/libfuse/osspd&quot;&gt;OSSPD&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Below you will find basic guidelines and what I edited in order to allow ASL to function with a &lt;em&gt;CURRENT&lt;/em&gt; kernel on raspbian.  This document makes a few assumptions:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;You know how to use an editor, of your choice, in the shell of your choice.&lt;/li&gt;
+  &lt;li&gt;You have ASL in a state where it will at least start up with the &lt;em&gt;CURRENT&lt;/em&gt; kernel.. &lt;em&gt;i.e. you built and installed the required dahdi modules from source&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;You know how to install applications on whatever distribution that you happen to be running&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;caveats&quot;&gt;Caveats&lt;/h3&gt;
+
+&lt;p&gt;Before we dive into it to far, I want to make note of a few current caveats.  Firstly I have not found a way to make OSSPD work properly with pulse running as a system wide service (if you don’t know what I’m talking about, I suggest RTFM or move on).  Secondly, I have not been able to successfully get Pulse to run as a daemon using systemctl, there are issues because when you do it this way pulse expects a window manager and we don’t want that overhead on the system IMHO….  So what this means is that unfortunately at this time (I’m working on a solution) when a system reboots the user needs to ssh into the box and manually do a few things.&lt;/p&gt;
+
+&lt;p&gt;Yes, I did try fairly exhaustively to use AOSS and ALSA-OSPD but was never able to make it work, so if you are so inclined please feel free because if we can eliminate Pulse from the equation it would simplify things a bit.  Of course having pulse in there gives us a lot of other capabilities.. so there is a tradeoff I suppose.&lt;/p&gt;
+
+&lt;h3 id=&quot;basic-steps-outline&quot;&gt;Basic Steps Outline&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;OPTIONAL&lt;/strong&gt; Disable the onboard audio (for Pi 3 etc…) unless you have an explicit reason to have it..&lt;br /&gt;
+ 	* Edit /lib/modprobe.d/raspi-blacklist.conf and add &lt;code class=&quot;highlighter-rouge&quot;&gt;blacklist snd_bcm2835&lt;/code&gt;&lt;br /&gt;
+ 	* reboot&lt;/li&gt;
+  &lt;li&gt;Determine hardware location(s) (run all as root unless otherwise noted)&lt;br /&gt;
+ 	* lsusb (look for C-Media Electronics, Inc) to be sure it’s even listed (your URI)&lt;br /&gt;
+ 	* aplay -l (make note of the card # associated with the USB PnP Sound Device)&lt;/li&gt;
+  &lt;li&gt;Edit /usr/share/alsa/alsa.conf to make the URI (USB Device) the default
+    &lt;ul&gt;
+      &lt;li&gt;find defaults.ctl.card and defaults.pcm.card&lt;br /&gt;
+ 		- their default value is 0, change this to the # value identified in step 1 using the aplay -l command&lt;br /&gt;
+ 5: Reboot&lt;br /&gt;
+ 6: Install OSSPD&lt;br /&gt;
+ 7: A few more edits&lt;br /&gt;
+ 8: Service restarts&lt;br /&gt;
+ 9: Audio should now work via alsa, pulse and aoss&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;slightly-more-detail&quot;&gt;Slightly more detail&lt;/h3&gt;
+
+&lt;p&gt;These are the exact steps that I took to emulate OSS.  Please remember to check logs files if you are experiencing things that you don’t expect, they usually contain information that will help with the troubleshooting process.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;edit /etc/pulse/daemon.conf changing the following lines to read as noted
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default-sample-rate = 48000
+default-fragments = 5
+default-fragment-size-msec = 2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;edit /usr/share/alsa/alsa.conf changing the following lines to read as noted
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;defaults.ctl.card 1 #card number from aplay -l
+defaults.pcm.card 1 #card number from aplay -l
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;edit /etc/pulse/default.pa changing the following lines to read as noted
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;load-module module-alsa-source device=hw:1,0 #device number specified in alsa.conf from aplay -l
+load-module module-udev-detect tsched=0 ignore_dB=1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;reboot&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;install osspd and execute the following after install
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo systemctl stop osspd.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;edit /lib/systemd/system/osspd.service and change the ExecStart line as noted
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ExecStart=/usr/sbin/osspd -f --dsp-slave=/usr/lib/osspd/ossp-padsp --adsp=dsp1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;execute the following commands to restart services etc…
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo systemctl daemon-reload
+sudo pulseaudio --start
+sudo systemctl start osspd.service
+sudo systemctl restart asterisk.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;some-additional-resources&quot;&gt;Some additional resources:&lt;/h2&gt;
+&lt;p&gt;https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting&lt;br /&gt;
+https://github.com/libfuse/osspd&lt;br /&gt;
+https://www.alsa-project.org/main/index.php/Main_Page&lt;/p&gt;
+</description>
+				<pubDate>Wed, 01 Aug 2018 06:00:00 -0600</pubDate>
+				<link>/2018/08/ALS_With_ALSA</link>
+				<guid isPermaLink="true">/2018/08/ALS_With_ALSA</guid>
+			</item>
+		
+			<item>
+				<title>Setting up AutoPatch and Reverse AutoPatch</title>
+				<description>&lt;h2 id=&quot;documentation-and-understanding&quot;&gt;Documentation and Understanding&lt;/h2&gt;
+&lt;p&gt;I am hoping that someone finds this post as useful as I might have.  Setting up the reverse autopatch was possibly the most difficult (or frustrating) part of this entire repeater project thus far.  One thing that I hope to help rectify going forward is the sparse documentation that exists for the &lt;a href=&quot;http://www.allstarlin.org&quot;&gt;AllStar project&lt;/a&gt;.  Please note that I am not trying to disparage the amazing work that Jim and the rest of the team have done, I certainly understand that they put a substantial amount of effort and development in to get the projet to where it is.  Rather, I am noting that this is my meager contribution in return and that ideally I will contribute more back to the project.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-nuts-and-bolts&quot;&gt;The Nuts and Bolts&lt;/h2&gt;
+&lt;p&gt;This post is intended to be a quick and dirty (how I did it) guide, with a little explanation along the way, of how to get autopatch and reverse autopatch functioning.  In order to get this working I took a good while (few days) putting together a basic grasp on how asterisk &lt;a href=&quot;https://wiki.asterisk.org/wiki/display/AST/Creating+Dialplan+Extensions&quot;&gt;dial-plans&lt;/a&gt; and their logic flow works.  You will find that the &lt;a href=&quot;http://docs.allstarlink.org/drupal/node/24&quot;&gt;stanza&lt;/a&gt; sections will refer &lt;em&gt;via goto&lt;/em&gt; statements to other stanzas and the like.  My mistake was that I changed names and made my own stanzas before I understood how it all tied together &lt;strong&gt;FACEPALM&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;autopatch-and-in-reverse&quot;&gt;Autopatch &lt;em&gt;And in Reverse&lt;/em&gt;&lt;/h3&gt;
+&lt;p&gt;For my configuration I used a Google Voice account without any Credit Card or payment info attached so that I didn’t have to worry about toll fraud.  I also used a service that acts as a SIP gateway to Google Voice.  Information about the gateway that I used can be found at &lt;a href=&quot;https://simonics.com/services/&quot;&gt;https://simonics.com/services/&lt;/a&gt;.  I elected to us this service rather than setting up my own gateway simply to reduce the complexity of what would need to be maintained going forward.  There are other options out there, and a bit of googling should get you sorted.&lt;/p&gt;
+
+&lt;h4 id=&quot;sipconf&quot;&gt;sip.conf&lt;/h4&gt;
+&lt;p&gt;There are two components that need to go into the &lt;em&gt;sip.conf&lt;/em&gt; file.  One is the register line, and the other will be the stanza that the register line refers back to.  This will be the configuration that allows us to both receive and place calls via our SIP peer.&lt;/p&gt;
+
+&lt;p&gt;Register example:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;ACCOUNT is the account user from simonics GV Gateway&lt;/li&gt;
+  &lt;li&gt;PASSWORD is the password for this user&lt;/li&gt;
+  &lt;li&gt;STANZAREFERENCE refers to the stanza detailed below&lt;/li&gt;
+  &lt;li&gt;NODE referse to YOUR Allstar node number&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;register=ACCOUNT:PASSWORD@STANZAREFERENCE/NODE&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Stanza example:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;ACCOUNT is the account user from simonics GV Gateway&lt;/li&gt;
+  &lt;li&gt;PASSWORD is the password for this user&lt;/li&gt;
+  &lt;li&gt;Make note of the “context” value - we will use it later&lt;/li&gt;
+  &lt;li&gt;There may be some options that are not needed, but these are what I used to make it happen, YMMV&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[STANZAREFERECE]
+type=peer
+allowguest=yes
+nat=yes
+autocreatepeer=yes
+insecure=port,invite
+username=ACCOUNT
+secret=PASSWORD
+host=gvgw.simonics.com
+qualify=no
+allow=ulaw
+allowexternaldomains=yes
+context=custom-gv-answer&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;Also note that &lt;em&gt;chan_sip.so&lt;/em&gt; needs to be set to load in your modules.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;extensionsconf&quot;&gt;extensions.conf&lt;/h4&gt;
+&lt;p&gt;The stanza names in this section are important, this is where I broke it all for myself and then spent several days working backward to understand how stanzas and dial-plans work.  These stanza names are referred to elsewhere by &lt;em&gt;context=&lt;/em&gt; and &lt;em&gt;goto&lt;/em&gt; lines and this is what comprises the logic flow, in a simplistic way.&lt;/p&gt;
+
+&lt;p&gt;There will be only two stanzas that we will add, the [pstn-out] is referred to in a few other spots and so must retain its name &lt;em&gt;or change it everywhere that it is called in extensions.conf&lt;/em&gt;.  The other is [custom-gv-answer] and simply must match the &lt;em&gt;context=&lt;/em&gt; line that is in the STANZAREFERECE stanza within sip.conf.&lt;/p&gt;
+
+&lt;p&gt;[pstn-out] &lt;em&gt;autopatch&lt;/em&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;STANZAREFERENCE refers back to the same name in sip.conf
+    &lt;ul&gt;
+      &lt;li&gt;This tells asterisk where to send a call matching the NXXNXXXXX pattern for autopatch calls&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[pstn-out]
+exten =&amp;gt; _NXXNXXXXXX,1,Dial(SIP/STANZAREFERENCE/\${EXTEN})
+exten =&amp;gt; _NXXNXXXXXX,2,Congestion&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;[custom-gv-answer] &lt;em&gt;reverse autopatch&lt;/em&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;MYNODE is your Allstar node number, this is important&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;[custom-gv-answer]
+exten =&amp;gt; _X.,1,Ringing
+exten =&amp;gt; _X.,n,Answer()
+exten =&amp;gt; _X.,n,Rpt(MYNODE|Rrpt/node:NODE:rpt/in-call:digits/0:PARKED|120) 75
+exten =&amp;gt; _X.,n,Hangup&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;featuresconf&quot;&gt;features.conf&lt;/h4&gt;
+&lt;p&gt;This file should look like this by default, but just in case.  This is what tells asterisk what slots to put the calls in, starting at 701.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;;
+; Sample Call Features (parking, transfer, etc) configuration
+;
+
+[general]
+parkext =&amp;gt; 700                  ; What extension to dial to park
+parkpos =&amp;gt; 701-720              ; What extensions to park calls on. These needs to be
+                                ; numeric, as Asterisk starts from the start position
+                                ; and increments with one for the next parked call.
+context =&amp;gt; parkedcalls          ; Which context parked calls are in&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;modulesconf&quot;&gt;modules.conf&lt;/h4&gt;
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;Make sure that &lt;em&gt;app_parkandannounce.so&lt;/em&gt; and &lt;em&gt;chan_sip.so&lt;/em&gt; are set to load.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;putting-it-all-together&quot;&gt;Putting it all together&lt;/h3&gt;
+&lt;p&gt;Assuming all of your configuration is good and you are registering with the gateway as a SIP peer, reverse and forward autopatch should work using whatever autopatchup and autopatchdn DTMF function is defined in your &lt;em&gt;rpt.conf&lt;/em&gt;  Mine are defined as:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;6 = autopatchup,noct = 1,farenddisconnect = 1,dialtime = 20000  ; Autopatch up
+0 = autopatchdn                                                 ; Autopatch down&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Given this &lt;em&gt;and reloading asterisk&lt;/em&gt; I can key and press *6 on my HT and hear a dialtone, at that point I can key again and dial the 10 or 11 digit phone number that I want to call and shazaaam it should work. To hangup a simple key *0 will get it done.&lt;/p&gt;
+
+&lt;p&gt;To receive a all, you should be able to call your GV number, the repeater will then announce that an incoming call is occurring and tell you the extension (default is 0701), in that case *60701 will pick the call up from park and *0 again to disconnect and hang up&lt;/p&gt;
+
+&lt;h3 id=&quot;a-few-fun-notes&quot;&gt;A few fun notes&lt;/h3&gt;
+&lt;p&gt;Asterisk provides some pretty solid debugging (sometimes more and sometimes less than you need).  Make use of them:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;core set verbose 4&lt;/li&gt;
+  &lt;li&gt;sip set verbose 4&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;And with that, I’ll bid you all 73s!&lt;/p&gt;
+
+&lt;p&gt;N0PKT&lt;/p&gt;
+</description>
+				<pubDate>Sun, 03 Apr 2016 18:00:00 -0600</pubDate>
+				<link>/2016/04/AllStar_AutoPatch</link>
+				<guid isPermaLink="true">/2016/04/AllStar_AutoPatch</guid>
+			</item>
+		
+			<item>
+				<title>N0PKT Rasberry Pi Power Control Part 1.5</title>
+				<description>&lt;h2 id=&quot;what-this-post-is-all-about&quot;&gt;What this post is all about&lt;/h2&gt;
+&lt;p&gt;This is a minor update to yesterdays post.  After I had done my testing and written the post I decided to look for better ways to control the GPIOs without requiring that the executing user run the commands as &lt;em&gt;ROOT&lt;/em&gt;.  Through the magic that is google I stumbled upon the &lt;a href=&quot;http://abyz.co.uk/rpi/pigpio/index.html&quot;&gt;pigpio set of libraries and utilities&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;software&quot;&gt;Software&lt;/h3&gt;
+&lt;p&gt;In the previous post I detailed the usage of the Python RPi.GPIO library.  However, I was pretty dissatisfied with the fact that the Python needed to be executed with &lt;em&gt;ROOT&lt;/em&gt; permissions, as this causes a significant security risk.  As noted above: a bit of googling produced the fruitful &lt;a href=&quot;http://abyz.co.uk/rpi/pigpio/index.html&quot;&gt;pigpio&lt;/a&gt;.  The benefit of pigpio (other than the fact that it’s cleaner) is that your python itself will no longer have to run under a root context.  There will be a daemon (still running under a root context) that will accept commands via socket.  In this way you can also &lt;em&gt;remotely&lt;/em&gt; control GPIOs on other RasPis.&lt;/p&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;I am running Debian as my base distribution, so these steps may be specific to Debian (though they shouldn’t be). I also assume that you have the appropriate dependencies installed to build from source.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Step 1 - Get the tarball and install.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;wget abyz.co.uk/rpi/pigpio/pigpio.zip
+unzip pigpio.zip
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;PIGPIO
+make
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;make &lt;span class=&quot;nb&quot;&gt;install
+sudo &lt;/span&gt;python setup.py &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;This is compiling on a RasPi, so keep in mind that it may take several minutes to build - don’t panic!&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;code-and-initial-testing&quot;&gt;Code and Initial Testing&lt;/h3&gt;
+&lt;p&gt;Some minor changes to test the boards in this section - everything other than the code is going to be similar.&lt;/p&gt;
+
+&lt;p&gt;Launch the daemon that controlls the GPIOs:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;pigpiod
+ps aux | &lt;span class=&quot;nb&quot;&gt;grep &lt;/span&gt;pigpiod
+root     17722  5.6  0.1  10864  1288 ?        SLsl Feb16  54:49 pigpiod&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Quick Test - Launch a Pyton interactive shell (NOT AS ROOT) and issue some verification and testing commands.  By issuing the following commands, assuming you are using the same RasPi and Relay Board as I am, you should see the LED and hear relay1 (IN1) physically switch over to the NO position when you set output to LOW and back to NC when you swithc to HIGH.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;python&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Python&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;2.7&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Mar&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2015&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;48&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GCC&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.9&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;linux2&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;help&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;copyright&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;credits&quot;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;license&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;more&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;information&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pigpio&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pigpio&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;il&quot;&gt;0L&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;il&quot;&gt;0L&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;You can also see that there is a response from issuing these commands, useful for error handling etc…&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I mentioned that this specific setup operates in reverse of what I expected.  Normally, or normally according to google searches, &lt;em&gt;OBJ.write(18,0)&lt;/em&gt; will turn &lt;em&gt;OFF&lt;/em&gt; the relay.  However, in the case of the noted relay board and raspi model it activates the NO side of the relay.  Here are a few scripts that I took from &lt;a href=&quot;https://github.com/fixedd/RPi_Relay_Interface&quot;&gt;GitHub&lt;/a&gt; and modified to work with this specific library, daemon, wiring and board model(s).&lt;/p&gt;
+
+&lt;p&gt;Turn &lt;em&gt;EVERY&lt;/em&gt; relay on:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/python&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pigpio&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pigpio&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# initialize a local pi object&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iteritems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Set output to low &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Turn &lt;em&gt;EVERY&lt;/em&gt; relay off:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/python&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pigpio&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pigpio&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# initialize a local pi object&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iteritems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c&quot;&gt;# Set output to high&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Cycle through 18,23,24,25 in a cylon style, ending with all in NC position:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/python&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;pigpio&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;time&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;sleep_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.05&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Define what pins we will be using, this is always using BCM when we use pigpio&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Create an object referencing a local Pi&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pigpio&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Function to turn off and on the GPIOs&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;pi1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Iterate trough each of the relay pins cycling on and off looking all cylon!&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;xrange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;               &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;               &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;final-thoughts&quot;&gt;Final Thoughts&lt;/h3&gt;
+&lt;p&gt;Even with setups like this in potentially closed systems one should have security and extensibility kept well in-mind.&lt;/p&gt;
+</description>
+				<pubDate>Tue, 16 Feb 2016 23:00:00 -0700</pubDate>
+				<link>/2016/02/Rasberry_Pi_Power_Control_PT1_5</link>
+				<guid isPermaLink="true">/2016/02/Rasberry_Pi_Power_Control_PT1_5</guid>
+			</item>
+		
+			<item>
+				<title>N0PKT Rasberry Pi Power Control Part 1</title>
+				<description>&lt;h2 id=&quot;building-a-rasberry-pi-power-control-unit&quot;&gt;Building a Rasberry Pi Power Control Unit&lt;/h2&gt;
+&lt;p&gt;In this post I detail the hardware, software, code and steps that I took to create the capability to remotely power cycle devices through the use of the GPIO pins on a Rasberry Pi to control both &lt;a href=&quot;https://en.wikipedia.org/wiki/Relay&quot;&gt;NO (Normally Open) and NC (Normally Closed) relays&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;It is important to note that we will be using both NO and NC relays to allow for a more fault tolerant build.  The RasPi will directly control NO relays that have a lower amperage rating.  These relays will, in-turn, control a 12v current to another NC relay to allow for a power cycle of any device connected to the higher amperage rated NC relay.&lt;/p&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;We use an NC relay to power our actual devices so that even in the event of a controlling circuit failure the device will remain powered on.  If we were using an NO relay there would be risk of power loss to the relay resulting in the NO to open and cause a loss of power to the main equipment.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;hardware&quot;&gt;Hardware&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;4 channel relay board with both NC and NO poles
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B00KTEN3TM&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;This is the relay module that interfaces directly with the GPIO on the raspi and will be responsible for controlling the higher load relay&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;RasPi GPIO T-Cobbler
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B00Q1T7728&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Not required but useful for mapping GPIO pins easily for testing&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;High capacity relays with both NC and NO poles
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B017VDI0GY&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Need to handle higher amperage as we will be pushing 8.5 through it for long periods of time at high usage times.&lt;/li&gt;
+      &lt;li&gt;NC Side of this does 30A @ 14VDC, should be adequate for &lt;em&gt;MY&lt;/em&gt; project&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Breadboard Jumpers
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B00M5WLZDW&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Used to connect RasPi to 4 channel relay board
+        &lt;ul&gt;
+          &lt;li&gt;Power&lt;/li&gt;
+          &lt;li&gt;Ground&lt;/li&gt;
+          &lt;li&gt;4x Control Channels&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Misc wire nuts and connectors&lt;/li&gt;
+  &lt;li&gt;Misc wire of appropriate guage for the load&lt;/li&gt;
+  &lt;li&gt;Appropriate sized project box to tidy things up &lt;em&gt;more on this later&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;relay-board-wiring&quot;&gt;Relay Board Wiring&lt;/h3&gt;
+&lt;p&gt;This section discusses connecting the 4 relay board to the RasPi.  Connecting the larger relay and powering of devices will be covered later.&lt;/p&gt;
+
+&lt;p&gt;You will note in the above bill of materials that I listed a T-Cobbler.  I used it briefly for some testing purposes to understand how the JBTek relay board worked and then removed it.  The T-Cobbler will not be used in the final buildout as it simply adds complexity and more wire risking more RF noise etc being picked up.&lt;/p&gt;
+
+&lt;p&gt;Before connecting the breadboard jumpers you need to know where you are going to connect them.  This image was taken from a google image search for “Rasberry Pi 2 Model B GPIO Pinout”.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;/images/raspi_power/raspi_pinout.png&quot;&gt;&lt;img src=&quot;http://enhanced.github.io/images/raspi_power/raspi_pinout.png&quot; alt=&quot;RasPi Pinout&quot; class=&quot;half-image&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;To keep things tidy and in-line I made use of the GPIO pins on the right side of the RasPi. The relay board requires 5V to operate the relay coils so the first pin to use is the top right, followed by the ground and then the &lt;em&gt;Green&lt;/em&gt; GPIO pins: 18,23,24 and 25. Following are the &lt;em&gt;random&lt;/em&gt; colors that I used and their respective pins.&lt;/p&gt;
+
+&lt;p&gt;RasPi Pinout&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;(Blue) 5v&lt;/li&gt;
+  &lt;li&gt;(Brown) Ground&lt;/li&gt;
+  &lt;li&gt;(Red) GPIO18&lt;/li&gt;
+  &lt;li&gt;(Yellow) GPIO23&lt;/li&gt;
+  &lt;li&gt;(Orange) GPIO24&lt;/li&gt;
+  &lt;li&gt;(Green) GPIO25&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;/images/raspi_power/raspi_wiring.jpg&quot;&gt;&lt;img src=&quot;http://enhanced.github.io/images/raspi_power/raspi_wiring.jpg&quot; alt=&quot;RasPi Pinout&quot; class=&quot;quarter-image&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Relay Board Pinout&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;(Blue) VCC&lt;/li&gt;
+  &lt;li&gt;(Green) IN4&lt;/li&gt;
+  &lt;li&gt;(Orange) IN3&lt;/li&gt;
+  &lt;li&gt;(Yellow) IN2&lt;/li&gt;
+  &lt;li&gt;(Red) IN1&lt;/li&gt;
+  &lt;li&gt;(Brown) GND&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;/images/raspi_power/relay_board_wiring.jpg&quot;&gt;&lt;img src=&quot;http://enhanced.github.io/images/raspi_power/relay_board_wiring.jpg&quot; alt=&quot;RasPi Pinout&quot; class=&quot;quarter-image&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;software&quot;&gt;Software&lt;/h3&gt;
+&lt;p&gt;There are a number of languages and supporting libraries/frameworks to said languages that allow progromatic control of the RasPi GPIOs.  For the purposes of this project, I elected to use Python and the &lt;a href=&quot;https://pypi.python.org/pypi/RPi.GPIO&quot;&gt;RPi.GPIO Python library&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;I am running Debian as my base distribution, so these steps may be specific to Debian (though they shouldn’t be).  Also note that as of the time that this was published the latest RPi.GPIO library was 0.6.1.  I also assume that you have the appropriate dependencies installed to build from source.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Step 1 - Get the tarball.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-zsh&quot; data-lang=&quot;zsh&quot;&gt;wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.6.1.tar.gz &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Step 2 - Decompress it and get into the directory.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-zsh&quot; data-lang=&quot;zsh&quot;&gt;&lt;span class=&quot;nb&quot;&gt;tar &lt;/span&gt;xvfz RPi.GPIO-0.5.11.tar.gz
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;RPi.GPIO-0.5.11 &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Step 3 - Build and install it!&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-zsh&quot; data-lang=&quot;zsh&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;python setup.py &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;code-and-initial-testing&quot;&gt;Code and Initial Testing&lt;/h3&gt;
+&lt;p&gt;One interesting thing that I found using this specific relay board is that everything is backward (or my understanding is) from most of what I find published about controlling such a board through google searches.&lt;/p&gt;
+
+&lt;p&gt;Quick Test - Launch a Pyton interactive shell and issue some verifying and testing commands.  By issuing the following commands, assuming you are using the same RasPi and Relay Board as I am, you should see the LED and hear relay1 (IN1) switch over to the NO position when you set output to LOW and back to NC when you swithc to HIGH.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sudo&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;python&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Python&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;2.7&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Mar&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2015&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;48&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GCC&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.9&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;linux2&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;help&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;copyright&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;credits&quot;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;license&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;more&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;information&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;RPi.GPIO&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RPI_INFO&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'P1_REVISION'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'RAM'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'1024M'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'REVISION'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'a21041'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'TYPE'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'Pi2 Model B'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'PROCESSOR'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'BCM2836'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'MANUFACTURER'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'Embest'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setmode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BCM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LOW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HIGH&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cleanup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;The GPIO.RPI_INFO command is not required, but may be useful to determine exactly what RasPi you have.  For the model that I am using, I needed to set the BCM pin map mode so that the pins aligned with the above diagram correctly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I mentioned that this specific setup operates in reverse of what I expected.  Normally, or normally according to google searches, &lt;em&gt;GPIO.output(18,GPIO.LOW)&lt;/em&gt; will turn &lt;em&gt;OFF&lt;/em&gt; the relay.  However, in the case of the noted relay board and raspi model it activates the NO side of the relay.  Here are a few scripts that I took from &lt;a href=&quot;https://github.com/fixedd/RPi_Relay_Interface&quot;&gt;GitHub&lt;/a&gt; and modified to work with this specific wiring and board model(s).&lt;/p&gt;
+
+&lt;p&gt;Turn &lt;em&gt;EVERY&lt;/em&gt; relay on:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/python&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;RPi.GPIO&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setmode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BOARD&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c&quot;&gt;# use P1 header pin numbering convention&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setwarnings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c&quot;&gt;# don't want to hear about how pins are already in use&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iteritems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LOW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Turn &lt;em&gt;EVERY&lt;/em&gt; relay off:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/python&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;RPi.GPIO&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setmode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BOARD&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c&quot;&gt;# use P1 header pin numbering convention&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setwarnings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c&quot;&gt;# don't want to hear about how pins are already in use&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iteritems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HIGH&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Cycle through 18,23,24,25 in a cylon style, ending with all in NC position:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;#!/usr/bin/python&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;RPi.GPIO&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;time&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;sleep_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.05&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# This works on the 2 b+ like BOARD on others, gtfo&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setmode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BCM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LOW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HIGH&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;#GPIO.setmode(GPIO.BOARD)  # use P1 header pin numbering convention&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setwarnings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c&quot;&gt;# don't want to hear about how pins are already in use&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iteritems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;board_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GPIO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;LOW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;xrange&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;               &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'four'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'three'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'two'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;float_pin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;relay_pins&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'one'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;               &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;final-thoughts&quot;&gt;Final Thoughts&lt;/h3&gt;
+&lt;p&gt;This has been quite the interesting project, if for nothing more than to see how things have changed and evolved over time (libraries and hardware) in contrast with examples and notes from people who have been here before.&lt;/p&gt;
+
+&lt;p&gt;In the next post I will cover how we wire in our larger relay and tie it all together with some flavor of a user interface and some error handling automation potentially.  I will also discuss buildout of a projet box to put everything securely into.&lt;/p&gt;
+</description>
+				<pubDate>Mon, 15 Feb 2016 17:00:00 -0700</pubDate>
+				<link>/2016/02/Rasberry_Pi_Power_Control_PT1</link>
+				<guid isPermaLink="true">/2016/02/Rasberry_Pi_Power_Control_PT1</guid>
+			</item>
+		
+			<item>
+				<title>N0PKT Initial Bristol Head Buildout Notes</title>
+				<description>&lt;h2 id=&quot;initial-n0pkt-bristol-head-repeater-buildout-notes&quot;&gt;Initial N0PKT Bristol Head Repeater Buildout Notes&lt;/h2&gt;
+
+&lt;p&gt;The following components are those that will be used to build the &lt;a href=&quot;https://www.allstarlink.org/&quot;&gt;allstarlink&lt;/a&gt; repeater on Bristol Head in Mineral County, CO.  The exact location that this repeater will be placed can be seen on &lt;a href=&quot;https://goo.gl/dv2Wdv&quot;&gt;google maps&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;I have been working closely with the Mineral County Sheriffs office to build a system that is capable of reliable use by the public and for Search and Rescue (SAR) operations.  The coverage area will be from Mineral County into Rio Grande County, parts of Hinsdale County and other surrounding areas.  In a later post I will include a coverage map.&lt;/p&gt;
+
+&lt;p&gt;I have not included details about the feedlines in this post, suffice it to say that I am hoping to get feedline for both the UHF and VHF side donated from the &lt;a href=&quot;http://www.cmrg.org&quot;&gt;Cheyenne Mountain Repeater Group&lt;/a&gt; in the form of 1/2” and 7/8” &lt;a href=&quot;https://en.wikipedia.org/wiki/Coaxial_cable&quot;&gt;heliax&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;core-radio-components&quot;&gt;Core Radio Components&lt;/h3&gt;
+
+&lt;h4 id=&quot;mtr2000-40-watt-radio&quot;&gt;&lt;a href=&quot;http://www.motorolasolutions.com/en_us/products/mototrbo-systems/discontinued/mtr2000.html&quot;&gt;MTR2000 40 Watt Radio&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.repeater-builder.com/motorola/mtr2k/pdf/mtr2000-vhf-uhf-catsheet.pdf&quot;&gt;Repeater PDF Info&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.ebay.com/itm/Motorola-MTR2000-UHF-40-Watts-403-470-Mhz-HAM-GR1225-/191157286287?hash=item2c81dcb58f:g:ZysAAOSwCQNWfxIJ&quot;&gt;Ebay Reseller&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Power Requirements
+    &lt;ul&gt;
+      &lt;li&gt;8.5 AMP on TX&lt;/li&gt;
+      &lt;li&gt;1.7 AMP on Stby&lt;/li&gt;
+      &lt;li&gt;14.2 VDC&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Cost: $875&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;rasberry-pi-ii-model-b-1gb&quot;&gt;&lt;a href=&quot;https://www.raspberrypi.org/products/raspberry-pi-2-model-b/&quot;&gt;Rasberry Pi II Model B (1GB)&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;This will be the primary control device for everything.  It will be responsible for not only APRS information relay but also control the repeater and allow for linking into the &lt;a href=&quot;http://www.k0jsc.com&quot;&gt;Fun Machine&lt;/a&gt; repeater system while also providing auto patch and reverse auto patch access.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;32GB Micro SD Card&lt;/li&gt;
+  &lt;li&gt;Running &lt;a href=&quot;https://goo.gl/zGZ8I8&quot;&gt;DIAL for AllStarLink&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Power Requirements
+    &lt;ul&gt;
+      &lt;li&gt;2 AMP&lt;/li&gt;
+      &lt;li&gt;5 VDC&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Cost: $49&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;rtl-sdr&quot;&gt;&lt;a href=&quot;http://www.rtl-sdr.com/&quot;&gt;RTL-SDR&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;For APRS iGate&lt;/li&gt;
+  &lt;li&gt;Cost: $25&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;The RTL-SDR will interface directly with the Rasberry Pi, see notes below for APRS iGate.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;uri-radio-to-pi-interface-and-controller&quot;&gt;&lt;a href=&quot;http://dmkeng.com/URI_Order_Page.htm&quot;&gt;URI (radio to pi interface and controller)&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://dmkeng.com/URI_Order_Page.htm&quot;&gt;http://dmkeng.com/URI_Order_Page.htm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Cost: $69&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;duplexer&quot;&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Duplexer&quot;&gt;Duplexer&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.ebay.com/itm/UHF-6-CAVITY-DUPLEXER-for-radio-repeater-N-connector-SQ-/221370208031?hash=item338ab14f1f:g:MZcAAOSw~bFWFabO&quot;&gt;Ebay Reseller&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Cost: $175&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;commscope-db420-or-equivalent-for-tx-antenna&quot;&gt;&lt;a href=&quot;http://www.commscope.com/catalog/andrew/product_details.aspx?id=15460&quot;&gt;Commscope DB420 (or equivalent for TX antenna)&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.theantennafarm.com/catalog/commscope-db420-b-4271.html&quot;&gt;Antenna Farm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Cost: $1625.00&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;diamond-x50na-antenna-vhf-aprs-rx-antenna&quot;&gt;&lt;a href=&quot;http://www.diamondantenna.net/x50a.html&quot;&gt;Diamond X50NA Antenna (VHF APRS RX antenna)&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;Cost: $100&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;miscelanious-supporting-hardware&quot;&gt;Miscelanious Supporting Hardware&lt;/h3&gt;
+
+&lt;h4 id=&quot;power-control&quot;&gt;Power Control&lt;/h4&gt;
+&lt;p&gt;The Power Controller will be controlled by the GPIO pins on the Rasberry Pi.  it will consist of the following components, I will detail more in a followon posting.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;4 Channel Relay Module with both NC and NO poles
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B00KTEN3TM&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Cost: $6.99&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;RasPi GPIO T-Cobbler
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B00Q1T7728&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Cost: $12.30&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;High capacity relays
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B017VDI0GY&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Cost: $13.00&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Breadboard Jumpers
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B00M5WLZDW&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Cost: $14.99&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Misc Informational Links to Similar Projects
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/&quot;&gt;http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/&quot;&gt;http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;power-stepdown-conversion-and-source&quot;&gt;Power StepDown Conversion and Source&lt;/h4&gt;
+&lt;p&gt;This is a solar/battery/generator site, where the main feed will be a 48v feed.  This feed will need to be down-converted to a 12v feed to power the Rasberry Pi and repeater.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;48 &amp;gt; 12v StepDown Converter
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;http://amzn.com/B015VYE546&quot;&gt;Amazon&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Cost: $50&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Battery Bank
+    &lt;ul&gt;
+      &lt;li&gt;BWG 121000 x4
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href=&quot;http://www.bwgllc.com/products/bwg-121000-group-27/&quot;&gt;http://www.bwgllc.com/products/bwg-121000-group-27/&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;$150&lt;/li&gt;
+          &lt;li&gt;$150 shipping&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;mounting-hardware&quot;&gt;Mounting Hardware&lt;/h4&gt;
+&lt;p&gt;The system will be mounted in a rack, assuming we will need minimal mounting items.&lt;/p&gt;
+
+&lt;h3 id=&quot;power-consumption&quot;&gt;Power Consumption&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: left&quot;&gt;Device&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;VDC&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Tx Amps&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;St Amps&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Radio&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;14.2&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;8.5&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;1.7&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Raspi&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;12&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;2&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Power Control&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;12&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;70mA&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;70mA&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;Total&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;strong&gt;12&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;strong&gt;10.6&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;3.8&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;price-list&quot;&gt;Price List&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: left&quot;&gt;Device&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;Price&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Repeater&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$875&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Duplexer&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$175&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Raspi&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$49&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;RTL-STR&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$25&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;URI&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$69&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;UHF Antenna&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$1625&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;VHF Antenna&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$100&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;UHF Feedline&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$150&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;VHF Feedline&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$150&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Relay Box&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$6.99&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Relays&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$13&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Jumpers&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$14.99&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;T-Cobbler&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$12.30&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Converter&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$50&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Batteries&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$750&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Rack Equipment&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;$200&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;&lt;strong&gt;Total&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;$4265.00&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;misc-applications&quot;&gt;Misc Applications&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/kantooon/qradiopredict&quot;&gt;QRadioPredict&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Used to simulate propogation&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://goo.gl/zGZ8I8&quot;&gt;AllStarLink Dial&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Runs on Rasberry Pi to create allstar controller and add other critical features&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.ve2dbe.com/&quot;&gt;Propogation Modeling&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Used to simulate propogation (online)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;raspi-aprs-igate-buildout&quot;&gt;RasPi APRS iGate Buildout&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://sq7mru.blogspot.co.nz/2013/08/aprs-igate-rx-z-tunera-dvb-t.html&quot;&gt;Some Directions&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/asdil12/kalibrate-rtl.git&quot;&gt;klaibrate-rtl&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Generate a passcode:
+    &lt;ul&gt;
+      &lt;li&gt;Code is included with pymultimonaprs noted in directions&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote class=&quot;note&quot;&gt;
+  &lt;p&gt;It is CRITICAL to note that the GAIN needs to be adjusted to a value that the RTL-SDR supports, these values can be determined by running the rtl_test and then sampling to see what you get .&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+				<pubDate>Thu, 11 Feb 2016 17:00:00 -0700</pubDate>
+				<link>/2016/02/Bristol-Buildout</link>
+				<guid isPermaLink="true">/2016/02/Bristol-Buildout</guid>
+			</item>
+		
+	</channel>
+</rss>

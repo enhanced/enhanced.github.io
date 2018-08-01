@@ -1,0 +1,429 @@
+
+  
+
+
+
+
+
+
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>enhanced things | N0PKT Rasberry Pi Power Control Part 1 </title>
+  <meta name="theme-color" content="#222222" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/assets/js/jquery.min.js"></script>
+  <script src="/assets/js/bootstrap.min.js"></script>
+  <script src="/assets/js/header.js"></script>
+  <script src="/assets/js/toc.js"></script>
+  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <link href="/assets/css/syntax.css" rel="stylesheet">
+  <link href="/assets/css/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-73891355-1`']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+  
+
+
+ <script type="text/javascript">
+  WebFontConfig = {
+    google: {
+      families: ['Ubuntu::latin']
+    }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">enhanced things</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/">/home</a></li>
+          <li><a href="/archive.html">/archive</a></li>
+          <li><a href="/tags.html">/tags</a></li>
+          <li><a href="/about.html">/about</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+    <div class="wrapper">
+      <div class="content">
+        <div class="container container-center">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="article">
+                <div class="well">
+                  <h1><a href="/2016/02/Rasberry_Pi_Power_Control_PT1">N0PKT Rasberry Pi Power Control Part 1</a></h1>
+                  <div class="post-meta">
+                    <div class="post-time">
+                      <i class="fa fa-calendar"></i>
+                      <time>15 Feb 2016</time>
+                    </div>
+                    <ul>
+                      
+                        <li><a href="/tag/amateur%20radio">amateur radio</a></li>
+                      
+                        <li><a href="/tag/repeater">repeater</a></li>
+                      
+                        <li><a href="/tag/n0pkt">n0pkt</a></li>
+                      
+                        <li><a href="/tag/rasberry%20pi">rasberry pi</a></li>
+                      
+                        <li><a href="/tag/electronics">electronics</a></li>
+                      
+                    </ul>
+                  </div>
+                  <div class="post-content">
+                    <div id="toc" class="toc"></div>
+                    <h2 id="building-a-rasberry-pi-power-control-unit">Building a Rasberry Pi Power Control Unit</h2>
+<p>In this post I detail the hardware, software, code and steps that I took to create the capability to remotely power cycle devices through the use of the GPIO pins on a Rasberry Pi to control both <a href="https://en.wikipedia.org/wiki/Relay">NO (Normally Open) and NC (Normally Closed) relays</a>.</p>
+
+<p>It is important to note that we will be using both NO and NC relays to allow for a more fault tolerant build.  The RasPi will directly control NO relays that have a lower amperage rating.  These relays will, in-turn, control a 12v current to another NC relay to allow for a power cycle of any device connected to the higher amperage rated NC relay.</p>
+
+<blockquote class="note">
+  <p>We use an NC relay to power our actual devices so that even in the event of a controlling circuit failure the device will remain powered on.  If we were using an NO relay there would be risk of power loss to the relay resulting in the NO to open and cause a loss of power to the main equipment.</p>
+</blockquote>
+
+<h3 id="hardware">Hardware</h3>
+<ul>
+  <li>4 channel relay board with both NC and NO poles
+    <ul>
+      <li><a href="http://amzn.com/B00KTEN3TM">Amazon</a></li>
+      <li>This is the relay module that interfaces directly with the GPIO on the raspi and will be responsible for controlling the higher load relay</li>
+    </ul>
+  </li>
+  <li>RasPi GPIO T-Cobbler
+    <ul>
+      <li><a href="http://amzn.com/B00Q1T7728">Amazon</a></li>
+      <li>Not required but useful for mapping GPIO pins easily for testing</li>
+    </ul>
+  </li>
+  <li>High capacity relays with both NC and NO poles
+    <ul>
+      <li><a href="http://amzn.com/B017VDI0GY">Amazon</a></li>
+      <li>Need to handle higher amperage as we will be pushing 8.5 through it for long periods of time at high usage times.</li>
+      <li>NC Side of this does 30A @ 14VDC, should be adequate for <em>MY</em> project</li>
+    </ul>
+  </li>
+  <li>Breadboard Jumpers
+    <ul>
+      <li><a href="http://amzn.com/B00M5WLZDW">Amazon</a></li>
+      <li>Used to connect RasPi to 4 channel relay board
+        <ul>
+          <li>Power</li>
+          <li>Ground</li>
+          <li>4x Control Channels</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Misc wire nuts and connectors</li>
+  <li>Misc wire of appropriate guage for the load</li>
+  <li>Appropriate sized project box to tidy things up <em>more on this later</em></li>
+</ul>
+
+<h3 id="relay-board-wiring">Relay Board Wiring</h3>
+<p>This section discusses connecting the 4 relay board to the RasPi.  Connecting the larger relay and powering of devices will be covered later.</p>
+
+<p>You will note in the above bill of materials that I listed a T-Cobbler.  I used it briefly for some testing purposes to understand how the JBTek relay board worked and then removed it.  The T-Cobbler will not be used in the final buildout as it simply adds complexity and more wire risking more RF noise etc being picked up.</p>
+
+<p>Before connecting the breadboard jumpers you need to know where you are going to connect them.  This image was taken from a google image search for “Rasberry Pi 2 Model B GPIO Pinout”.</p>
+
+<p><a href="/images/raspi_power/raspi_pinout.png"><img src="http://enhanced.github.io/images/raspi_power/raspi_pinout.png" alt="RasPi Pinout" class="half-image" /></a></p>
+
+<p>To keep things tidy and in-line I made use of the GPIO pins on the right side of the RasPi. The relay board requires 5V to operate the relay coils so the first pin to use is the top right, followed by the ground and then the <em>Green</em> GPIO pins: 18,23,24 and 25. Following are the <em>random</em> colors that I used and their respective pins.</p>
+
+<p>RasPi Pinout</p>
+
+<ul>
+  <li>(Blue) 5v</li>
+  <li>(Brown) Ground</li>
+  <li>(Red) GPIO18</li>
+  <li>(Yellow) GPIO23</li>
+  <li>(Orange) GPIO24</li>
+  <li>(Green) GPIO25</li>
+</ul>
+
+<p><a href="/images/raspi_power/raspi_wiring.jpg"><img src="http://enhanced.github.io/images/raspi_power/raspi_wiring.jpg" alt="RasPi Pinout" class="quarter-image" /></a></p>
+
+<p>Relay Board Pinout</p>
+
+<ul>
+  <li>(Blue) VCC</li>
+  <li>(Green) IN4</li>
+  <li>(Orange) IN3</li>
+  <li>(Yellow) IN2</li>
+  <li>(Red) IN1</li>
+  <li>(Brown) GND</li>
+</ul>
+
+<p><a href="/images/raspi_power/relay_board_wiring.jpg"><img src="http://enhanced.github.io/images/raspi_power/relay_board_wiring.jpg" alt="RasPi Pinout" class="quarter-image" /></a></p>
+
+<h3 id="software">Software</h3>
+<p>There are a number of languages and supporting libraries/frameworks to said languages that allow progromatic control of the RasPi GPIOs.  For the purposes of this project, I elected to use Python and the <a href="https://pypi.python.org/pypi/RPi.GPIO">RPi.GPIO Python library</a>.</p>
+
+<blockquote class="note">
+  <p>I am running Debian as my base distribution, so these steps may be specific to Debian (though they shouldn’t be).  Also note that as of the time that this was published the latest RPi.GPIO library was 0.6.1.  I also assume that you have the appropriate dependencies installed to build from source.</p>
+</blockquote>
+
+<p>Step 1 - Get the tarball.</p>
+
+<figure class="highlight"><pre><code class="language-zsh" data-lang="zsh">wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.6.1.tar.gz </code></pre></figure>
+
+<p>Step 2 - Decompress it and get into the directory.</p>
+
+<figure class="highlight"><pre><code class="language-zsh" data-lang="zsh"><span class="nb">tar </span>xvfz RPi.GPIO-0.5.11.tar.gz
+<span class="nb">cd </span>RPi.GPIO-0.5.11 </code></pre></figure>
+
+<p>Step 3 - Build and install it!</p>
+
+<figure class="highlight"><pre><code class="language-zsh" data-lang="zsh"><span class="nb">sudo </span>python setup.py <span class="nb">install</span></code></pre></figure>
+
+<h3 id="code-and-initial-testing">Code and Initial Testing</h3>
+<p>One interesting thing that I found using this specific relay board is that everything is backward (or my understanding is) from most of what I find published about controlling such a board through google searches.</p>
+
+<p>Quick Test - Launch a Pyton interactive shell and issue some verifying and testing commands.  By issuing the following commands, assuming you are using the same RasPi and Relay Board as I am, you should see the LED and hear relay1 (IN1) switch over to the NO position when you set output to LOW and back to NC when you swithc to HIGH.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="err">$</span> <span class="n">sudo</span> <span class="n">python</span>
+<span class="n">Python</span> <span class="mf">2.7</span><span class="o">.</span><span class="mi">9</span> <span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">Mar</span>  <span class="mi">1</span> <span class="mi">2015</span><span class="p">,</span> <span class="mi">13</span><span class="p">:</span><span class="mi">48</span><span class="p">:</span><span class="mi">22</span><span class="p">)</span>
+<span class="p">[</span><span class="n">GCC</span> <span class="mf">4.9</span><span class="o">.</span><span class="mi">2</span><span class="p">]</span> <span class="n">on</span> <span class="n">linux2</span>
+<span class="n">Type</span> <span class="s">"help"</span><span class="p">,</span> <span class="s">"copyright"</span><span class="p">,</span> <span class="s">"credits"</span> <span class="ow">or</span> <span class="s">"license"</span> <span class="k">for</span> <span class="n">more</span> <span class="n">information</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">RPi.GPIO</span> <span class="k">as</span> <span class="n">GPIO</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">RPI_INFO</span>
+<span class="p">{</span><span class="s">'P1_REVISION'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s">'RAM'</span><span class="p">:</span> <span class="s">'1024M'</span><span class="p">,</span> <span class="s">'REVISION'</span><span class="p">:</span> <span class="s">'a21041'</span><span class="p">,</span> <span class="s">'TYPE'</span><span class="p">:</span> <span class="s">'Pi2 Model B'</span><span class="p">,</span> <span class="s">'PROCESSOR'</span><span class="p">:</span> <span class="s">'BCM2836'</span><span class="p">,</span> <span class="s">'MANUFACTURER'</span><span class="p">:</span> <span class="s">'Embest'</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">setmode</span><span class="p">(</span><span class="n">GPIO</span><span class="o">.</span><span class="n">BCM</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="n">GPIO</span><span class="o">.</span><span class="n">OUT</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="n">GPIO</span><span class="o">.</span><span class="n">LOW</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="n">GPIO</span><span class="o">.</span><span class="n">HIGH</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">exit</span><span class="p">()</span></code></pre></figure>
+
+<blockquote class="note">
+  <p>The GPIO.RPI_INFO command is not required, but may be useful to determine exactly what RasPi you have.  For the model that I am using, I needed to set the BCM pin map mode so that the pins aligned with the above diagram correctly.</p>
+</blockquote>
+
+<p>I mentioned that this specific setup operates in reverse of what I expected.  Normally, or normally according to google searches, <em>GPIO.output(18,GPIO.LOW)</em> will turn <em>OFF</em> the relay.  However, in the case of the noted relay board and raspi model it activates the NO side of the relay.  Here are a few scripts that I took from <a href="https://github.com/fixedd/RPi_Relay_Interface">GitHub</a> and modified to work with this specific wiring and board model(s).</p>
+
+<p>Turn <em>EVERY</em> relay on:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">RPi.GPIO</span> <span class="k">as</span> <span class="n">GPIO</span>
+
+<span class="n">relay_pins</span> <span class="o">=</span> <span class="p">{</span><span class="s">'one'</span><span class="p">:</span><span class="mi">18</span><span class="p">,</span> <span class="s">'two'</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span> <span class="s">'three'</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span> <span class="s">'four'</span><span class="p">:</span><span class="mi">25</span><span class="p">}</span>
+
+<span class="n">GPIO</span><span class="o">.</span><span class="n">setmode</span><span class="p">(</span><span class="n">GPIO</span><span class="o">.</span><span class="n">BOARD</span><span class="p">)</span>  <span class="c"># use P1 header pin numbering convention</span>
+<span class="n">GPIO</span><span class="o">.</span><span class="n">setwarnings</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>   <span class="c"># don't want to hear about how pins are already in use</span>
+
+<span class="k">for</span> <span class="n">relay_pin</span><span class="p">,</span> <span class="n">board_pin</span> <span class="ow">in</span> <span class="n">relay_pins</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">OUT</span><span class="p">)</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">LOW</span><span class="p">)</span></code></pre></figure>
+
+<p>Turn <em>EVERY</em> relay off:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">RPi.GPIO</span> <span class="k">as</span> <span class="n">GPIO</span>
+
+<span class="n">relay_pins</span> <span class="o">=</span> <span class="p">{</span><span class="s">'one'</span><span class="p">:</span><span class="mi">18</span><span class="p">,</span> <span class="s">'two'</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span> <span class="s">'three'</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span> <span class="s">'four'</span><span class="p">:</span><span class="mi">25</span><span class="p">}</span>
+
+<span class="n">GPIO</span><span class="o">.</span><span class="n">setmode</span><span class="p">(</span><span class="n">GPIO</span><span class="o">.</span><span class="n">BOARD</span><span class="p">)</span>  <span class="c"># use P1 header pin numbering convention</span>
+<span class="n">GPIO</span><span class="o">.</span><span class="n">setwarnings</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>   <span class="c"># don't want to hear about how pins are already in use</span>
+
+<span class="k">for</span> <span class="n">relay_pin</span><span class="p">,</span> <span class="n">board_pin</span> <span class="ow">in</span> <span class="n">relay_pins</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">OUT</span><span class="p">)</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">HIGH</span><span class="p">)</span></code></pre></figure>
+
+<p>Cycle through 18,23,24,25 in a cylon style, ending with all in NC position:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">RPi.GPIO</span> <span class="k">as</span> <span class="n">GPIO</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">sleep_time</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">relay_pins</span> <span class="o">=</span> <span class="p">{</span><span class="s">'one'</span><span class="p">:</span><span class="mi">18</span><span class="p">,</span> <span class="s">'two'</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span> <span class="s">'three'</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span> <span class="s">'four'</span><span class="p">:</span><span class="mi">25</span><span class="p">}</span>
+
+<span class="c"># This works on the 2 b+ like BOARD on others, gtfo</span>
+<span class="n">GPIO</span><span class="o">.</span><span class="n">setmode</span><span class="p">(</span><span class="n">GPIO</span><span class="o">.</span><span class="n">BCM</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">float_pin</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="n">on</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">on</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">on</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">LOW</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">off</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">HIGH</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">);</span>
+
+<span class="c">#GPIO.setmode(GPIO.BOARD)  # use P1 header pin numbering convention</span>
+<span class="n">GPIO</span><span class="o">.</span><span class="n">setwarnings</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>   <span class="c"># don't want to hear about how pins are already in use</span>
+
+<span class="k">for</span> <span class="n">relay_pin</span><span class="p">,</span> <span class="n">board_pin</span> <span class="ow">in</span> <span class="n">relay_pins</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">OUT</span><span class="p">)</span>
+        <span class="n">GPIO</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">GPIO</span><span class="o">.</span><span class="n">LOW</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="bp">None</span>               <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">])</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">],</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'four'</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'four'</span><span class="p">]</span> <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">])</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'three'</span><span class="p">],</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'two'</span><span class="p">]</span>  <span class="p">,</span> <span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">)</span>
+        <span class="n">float_pin</span><span class="p">(</span><span class="n">relay_pins</span><span class="p">[</span><span class="s">'one'</span><span class="p">]</span>  <span class="p">,</span> <span class="bp">None</span>               <span class="p">)</span></code></pre></figure>
+
+<h3 id="final-thoughts">Final Thoughts</h3>
+<p>This has been quite the interesting project, if for nothing more than to see how things have changed and evolved over time (libraries and hardware) in contrast with examples and notes from people who have been here before.</p>
+
+<p>In the next post I will cover how we wire in our larger relay and tie it all together with some flavor of a user interface and some error handling automation potentially.  I will also discuss buildout of a projet box to put everything securely into.</p>
+
+                    
+
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 hidden-xs">
+              <div class="sidebar ">
+  <h2>Recent Posts</h2>
+  <ul>
+    
+    <li><a href="/2018/08/ALS_With_ALSA">AllStar using Alsa and Pulseaudio instead of OSS</a></li>
+    
+    <li><a href="/2016/04/AllStar_AutoPatch">Setting up AutoPatch and Reverse AutoPatch</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1_5">N0PKT Rasberry Pi Power Control Part 1.5</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1">N0PKT Rasberry Pi Power Control Part 1</a></li>
+    
+    <li><a href="/2016/02/Bristol-Buildout">N0PKT Initial Bristol Head Buildout Notes</a></li>
+    
+  </ul>
+</div>
+
+<div class="sidebar">
+  <h2>Tags</h2>
+  <ul class="sideBarTags">
+    
+    
+    <li>
+      <a href="/tag/APRS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>APRS</span></a></li>
+    
+    <li>
+      <a href="/tag/Alsa" data-toggle="tooltip" data-placement="right" title="1">
+        <span>Alsa</span></a></li>
+    
+    <li>
+      <a href="/tag/OSS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>OSS</span></a></li>
+    
+    <li>
+      <a href="/tag/PulseAudio" data-toggle="tooltip" data-placement="right" title="1">
+        <span>PulseAudio</span></a></li>
+    
+    <li>
+      <a href="/tag/URIx" data-toggle="tooltip" data-placement="right" title="1">
+        <span>URIx</span></a></li>
+    
+    <li>
+      <a href="/tag/amateur%20radio" data-toggle="tooltip" data-placement="right" title="5">
+        <span>amateur radio</span></a></li>
+    
+    <li>
+      <a href="/tag/electronics" data-toggle="tooltip" data-placement="right" title="5">
+        <span>electronics</span></a></li>
+    
+    <li>
+      <a href="/tag/n0pkt" data-toggle="tooltip" data-placement="right" title="5">
+        <span>n0pkt</span></a></li>
+    
+    <li>
+      <a href="/tag/rasberry%20pi" data-toggle="tooltip" data-placement="right" title="5">
+        <span>rasberry pi</span></a></li>
+    
+    <li>
+      <a href="/tag/repeater" data-toggle="tooltip" data-placement="right" title="5">
+        <span>repeater</span></a></li>
+    
+  </ul>
+</div>
+
+            </div>
+          </div>
+        </div>
+        
+
+      </div>
+          <footer class="footer-distributed">
+      <div class="container">
+        <div class="footer">
+          <p> &copy; </p>
+          <h6>Follow me</h6>
+
+<ul class="social-media">
+
+  
+    <li>
+      <a title="enhanced on Github" href="https://github.com/enhanced" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    </li>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <li>
+      <a title="feed.xml RSS" href="/feed.xml" target="_blank"><i class="fa fa-rss fa-2x"></i></a>
+    </li>
+  
+
+</ul>
+
+        </div>
+      </div>
+    </footer>
+
+    </div>
+  </body>
+</html>

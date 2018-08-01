@@ -1,0 +1,522 @@
+
+  
+
+
+
+
+
+
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>enhanced things | N0PKT Initial Bristol Head Buildout Notes </title>
+  <meta name="theme-color" content="#222222" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/assets/js/jquery.min.js"></script>
+  <script src="/assets/js/bootstrap.min.js"></script>
+  <script src="/assets/js/header.js"></script>
+  <script src="/assets/js/toc.js"></script>
+  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <link href="/assets/css/syntax.css" rel="stylesheet">
+  <link href="/assets/css/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-73891355-1`']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+  
+
+
+ <script type="text/javascript">
+  WebFontConfig = {
+    google: {
+      families: ['Ubuntu::latin']
+    }
+  };
+  (function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+      '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+  })();
+</script>
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">enhanced things</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/">/home</a></li>
+          <li><a href="/archive.html">/archive</a></li>
+          <li><a href="/tags.html">/tags</a></li>
+          <li><a href="/about.html">/about</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+    <div class="wrapper">
+      <div class="content">
+        <div class="container container-center">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="article">
+                <div class="well">
+                  <h1><a href="/2016/02/Bristol-Buildout">N0PKT Initial Bristol Head Buildout Notes</a></h1>
+                  <div class="post-meta">
+                    <div class="post-time">
+                      <i class="fa fa-calendar"></i>
+                      <time>11 Feb 2016</time>
+                    </div>
+                    <ul>
+                      
+                        <li><a href="/tag/amateur%20radio">amateur radio</a></li>
+                      
+                        <li><a href="/tag/repeater">repeater</a></li>
+                      
+                        <li><a href="/tag/n0pkt">n0pkt</a></li>
+                      
+                        <li><a href="/tag/rasberry%20pi">rasberry pi</a></li>
+                      
+                        <li><a href="/tag/APRS">APRS</a></li>
+                      
+                        <li><a href="/tag/electronics">electronics</a></li>
+                      
+                    </ul>
+                  </div>
+                  <div class="post-content">
+                    <div id="toc" class="toc"></div>
+                    <h2 id="initial-n0pkt-bristol-head-repeater-buildout-notes">Initial N0PKT Bristol Head Repeater Buildout Notes</h2>
+
+<p>The following components are those that will be used to build the <a href="https://www.allstarlink.org/">allstarlink</a> repeater on Bristol Head in Mineral County, CO.  The exact location that this repeater will be placed can be seen on <a href="https://goo.gl/dv2Wdv">google maps</a></p>
+
+<p>I have been working closely with the Mineral County Sheriffs office to build a system that is capable of reliable use by the public and for Search and Rescue (SAR) operations.  The coverage area will be from Mineral County into Rio Grande County, parts of Hinsdale County and other surrounding areas.  In a later post I will include a coverage map.</p>
+
+<p>I have not included details about the feedlines in this post, suffice it to say that I am hoping to get feedline for both the UHF and VHF side donated from the <a href="http://www.cmrg.org">Cheyenne Mountain Repeater Group</a> in the form of 1/2” and 7/8” <a href="https://en.wikipedia.org/wiki/Coaxial_cable">heliax</a>.</p>
+
+<h3 id="core-radio-components">Core Radio Components</h3>
+
+<h4 id="mtr2000-40-watt-radio"><a href="http://www.motorolasolutions.com/en_us/products/mototrbo-systems/discontinued/mtr2000.html">MTR2000 40 Watt Radio</a></h4>
+<ul>
+  <li><a href="http://www.repeater-builder.com/motorola/mtr2k/pdf/mtr2000-vhf-uhf-catsheet.pdf">Repeater PDF Info</a></li>
+  <li><a href="http://www.ebay.com/itm/Motorola-MTR2000-UHF-40-Watts-403-470-Mhz-HAM-GR1225-/191157286287?hash=item2c81dcb58f:g:ZysAAOSwCQNWfxIJ">Ebay Reseller</a></li>
+  <li>Power Requirements
+    <ul>
+      <li>8.5 AMP on TX</li>
+      <li>1.7 AMP on Stby</li>
+      <li>14.2 VDC</li>
+    </ul>
+  </li>
+  <li>Cost: $875</li>
+</ul>
+
+<h4 id="rasberry-pi-ii-model-b-1gb"><a href="https://www.raspberrypi.org/products/raspberry-pi-2-model-b/">Rasberry Pi II Model B (1GB)</a></h4>
+<p>This will be the primary control device for everything.  It will be responsible for not only APRS information relay but also control the repeater and allow for linking into the <a href="http://www.k0jsc.com">Fun Machine</a> repeater system while also providing auto patch and reverse auto patch access.</p>
+
+<ul>
+  <li>32GB Micro SD Card</li>
+  <li>Running <a href="https://goo.gl/zGZ8I8">DIAL for AllStarLink</a></li>
+  <li>Power Requirements
+    <ul>
+      <li>2 AMP</li>
+      <li>5 VDC</li>
+    </ul>
+  </li>
+  <li>Cost: $49</li>
+</ul>
+
+<h4 id="rtl-sdr"><a href="http://www.rtl-sdr.com/">RTL-SDR</a></h4>
+<ul>
+  <li>For APRS iGate</li>
+  <li>Cost: $25</li>
+</ul>
+
+<blockquote class="note">
+  <p>The RTL-SDR will interface directly with the Rasberry Pi, see notes below for APRS iGate.</p>
+</blockquote>
+
+<h4 id="uri-radio-to-pi-interface-and-controller"><a href="http://dmkeng.com/URI_Order_Page.htm">URI (radio to pi interface and controller)</a></h4>
+<ul>
+  <li><a href="http://dmkeng.com/URI_Order_Page.htm">http://dmkeng.com/URI_Order_Page.htm</a></li>
+  <li>Cost: $69</li>
+</ul>
+
+<h4 id="duplexer"><a href="https://en.wikipedia.org/wiki/Duplexer">Duplexer</a></h4>
+<ul>
+  <li><a href="http://www.ebay.com/itm/UHF-6-CAVITY-DUPLEXER-for-radio-repeater-N-connector-SQ-/221370208031?hash=item338ab14f1f:g:MZcAAOSw~bFWFabO">Ebay Reseller</a></li>
+  <li>Cost: $175</li>
+</ul>
+
+<h4 id="commscope-db420-or-equivalent-for-tx-antenna"><a href="http://www.commscope.com/catalog/andrew/product_details.aspx?id=15460">Commscope DB420 (or equivalent for TX antenna)</a></h4>
+<ul>
+  <li><a href="http://www.theantennafarm.com/catalog/commscope-db420-b-4271.html">Antenna Farm</a></li>
+  <li>Cost: $1625.00</li>
+</ul>
+
+<h4 id="diamond-x50na-antenna-vhf-aprs-rx-antenna"><a href="http://www.diamondantenna.net/x50a.html">Diamond X50NA Antenna (VHF APRS RX antenna)</a></h4>
+<ul>
+  <li>Cost: $100</li>
+</ul>
+
+<h3 id="miscelanious-supporting-hardware">Miscelanious Supporting Hardware</h3>
+
+<h4 id="power-control">Power Control</h4>
+<p>The Power Controller will be controlled by the GPIO pins on the Rasberry Pi.  it will consist of the following components, I will detail more in a followon posting.</p>
+
+<ul>
+  <li>4 Channel Relay Module with both NC and NO poles
+    <ul>
+      <li><a href="http://amzn.com/B00KTEN3TM">Amazon</a></li>
+      <li>Cost: $6.99</li>
+    </ul>
+  </li>
+  <li>RasPi GPIO T-Cobbler
+    <ul>
+      <li><a href="http://amzn.com/B00Q1T7728">Amazon</a></li>
+      <li>Cost: $12.30</li>
+    </ul>
+  </li>
+  <li>High capacity relays
+    <ul>
+      <li><a href="http://amzn.com/B017VDI0GY">Amazon</a></li>
+      <li>Cost: $13.00</li>
+    </ul>
+  </li>
+  <li>Breadboard Jumpers
+    <ul>
+      <li><a href="http://amzn.com/B00M5WLZDW">Amazon</a></li>
+      <li>Cost: $14.99</li>
+    </ul>
+  </li>
+  <li>Misc Informational Links to Similar Projects
+    <ul>
+      <li><a href="http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/">http://www.instructables.com/id/Web-Controlled-8-Channel-Powerstrip/</a></li>
+      <li><a href="http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/">http://forums.connectedly.com/raspberry-pi-f179/how-controlling-gpio-pins-via-internet-2884/</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="power-stepdown-conversion-and-source">Power StepDown Conversion and Source</h4>
+<p>This is a solar/battery/generator site, where the main feed will be a 48v feed.  This feed will need to be down-converted to a 12v feed to power the Rasberry Pi and repeater.</p>
+
+<ul>
+  <li>48 &gt; 12v StepDown Converter
+    <ul>
+      <li><a href="http://amzn.com/B015VYE546">Amazon</a></li>
+      <li>Cost: $50</li>
+    </ul>
+  </li>
+  <li>Battery Bank
+    <ul>
+      <li>BWG 121000 x4
+        <ul>
+          <li><a href="http://www.bwgllc.com/products/bwg-121000-group-27/">http://www.bwgllc.com/products/bwg-121000-group-27/</a></li>
+          <li>$150</li>
+          <li>$150 shipping</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="mounting-hardware">Mounting Hardware</h4>
+<p>The system will be mounted in a rack, assuming we will need minimal mounting items.</p>
+
+<h3 id="power-consumption">Power Consumption</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Device</th>
+      <th style="text-align: center">VDC</th>
+      <th style="text-align: center">Tx Amps</th>
+      <th style="text-align: right">St Amps</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Radio</td>
+      <td style="text-align: center">14.2</td>
+      <td style="text-align: center">8.5</td>
+      <td style="text-align: right">1.7</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Raspi</td>
+      <td style="text-align: center">12</td>
+      <td style="text-align: center">2</td>
+      <td style="text-align: right">2</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Power Control</td>
+      <td style="text-align: center">12</td>
+      <td style="text-align: center">70mA</td>
+      <td style="text-align: right">70mA</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Total</strong></td>
+      <td style="text-align: center"><strong>12</strong></td>
+      <td style="text-align: center"><strong>10.6</strong></td>
+      <td style="text-align: right"><strong>3.8</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="price-list">Price List</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Device</th>
+      <th style="text-align: right">Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Repeater</td>
+      <td style="text-align: right">$875</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Duplexer</td>
+      <td style="text-align: right">$175</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Raspi</td>
+      <td style="text-align: right">$49</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RTL-STR</td>
+      <td style="text-align: right">$25</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">URI</td>
+      <td style="text-align: right">$69</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">UHF Antenna</td>
+      <td style="text-align: right">$1625</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">VHF Antenna</td>
+      <td style="text-align: right">$100</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">UHF Feedline</td>
+      <td style="text-align: right">$150</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">VHF Feedline</td>
+      <td style="text-align: right">$150</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Relay Box</td>
+      <td style="text-align: right">$6.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Relays</td>
+      <td style="text-align: right">$13</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Jumpers</td>
+      <td style="text-align: right">$14.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">T-Cobbler</td>
+      <td style="text-align: right">$12.30</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Converter</td>
+      <td style="text-align: right">$50</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Batteries</td>
+      <td style="text-align: right">$750</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Rack Equipment</td>
+      <td style="text-align: right">$200</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Total</strong></td>
+      <td style="text-align: right"><strong>$4265.00</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="misc-applications">Misc Applications</h3>
+<ul>
+  <li><a href="https://github.com/kantooon/qradiopredict">QRadioPredict</a>
+    <ul>
+      <li>Used to simulate propogation</li>
+    </ul>
+  </li>
+  <li><a href="https://goo.gl/zGZ8I8">AllStarLink Dial</a>
+    <ul>
+      <li>Runs on Rasberry Pi to create allstar controller and add other critical features</li>
+    </ul>
+  </li>
+  <li><a href="http://www.ve2dbe.com/">Propogation Modeling</a>
+    <ul>
+      <li>Used to simulate propogation (online)</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="raspi-aprs-igate-buildout">RasPi APRS iGate Buildout</h3>
+<ul>
+  <li><a href="http://sq7mru.blogspot.co.nz/2013/08/aprs-igate-rx-z-tunera-dvb-t.html">Some Directions</a></li>
+  <li><a href="https://github.com/asdil12/kalibrate-rtl.git">klaibrate-rtl</a></li>
+  <li>Generate a passcode:
+    <ul>
+      <li>Code is included with pymultimonaprs noted in directions</li>
+    </ul>
+  </li>
+</ul>
+
+<blockquote class="note">
+  <p>It is CRITICAL to note that the GAIN needs to be adjusted to a value that the RTL-SDR supports, these values can be determined by running the rtl_test and then sampling to see what you get .</p>
+</blockquote>
+
+                    
+
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 hidden-xs">
+              <div class="sidebar ">
+  <h2>Recent Posts</h2>
+  <ul>
+    
+    <li><a href="/2018/08/ALS_With_ALSA">AllStar using Alsa and Pulseaudio instead of OSS</a></li>
+    
+    <li><a href="/2016/04/AllStar_AutoPatch">Setting up AutoPatch and Reverse AutoPatch</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1_5">N0PKT Rasberry Pi Power Control Part 1.5</a></li>
+    
+    <li><a href="/2016/02/Rasberry_Pi_Power_Control_PT1">N0PKT Rasberry Pi Power Control Part 1</a></li>
+    
+    <li><a href="/2016/02/Bristol-Buildout">N0PKT Initial Bristol Head Buildout Notes</a></li>
+    
+  </ul>
+</div>
+
+<div class="sidebar">
+  <h2>Tags</h2>
+  <ul class="sideBarTags">
+    
+    
+    <li>
+      <a href="/tag/APRS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>APRS</span></a></li>
+    
+    <li>
+      <a href="/tag/Alsa" data-toggle="tooltip" data-placement="right" title="1">
+        <span>Alsa</span></a></li>
+    
+    <li>
+      <a href="/tag/OSS" data-toggle="tooltip" data-placement="right" title="1">
+        <span>OSS</span></a></li>
+    
+    <li>
+      <a href="/tag/PulseAudio" data-toggle="tooltip" data-placement="right" title="1">
+        <span>PulseAudio</span></a></li>
+    
+    <li>
+      <a href="/tag/URIx" data-toggle="tooltip" data-placement="right" title="1">
+        <span>URIx</span></a></li>
+    
+    <li>
+      <a href="/tag/amateur%20radio" data-toggle="tooltip" data-placement="right" title="5">
+        <span>amateur radio</span></a></li>
+    
+    <li>
+      <a href="/tag/electronics" data-toggle="tooltip" data-placement="right" title="5">
+        <span>electronics</span></a></li>
+    
+    <li>
+      <a href="/tag/n0pkt" data-toggle="tooltip" data-placement="right" title="5">
+        <span>n0pkt</span></a></li>
+    
+    <li>
+      <a href="/tag/rasberry%20pi" data-toggle="tooltip" data-placement="right" title="5">
+        <span>rasberry pi</span></a></li>
+    
+    <li>
+      <a href="/tag/repeater" data-toggle="tooltip" data-placement="right" title="5">
+        <span>repeater</span></a></li>
+    
+  </ul>
+</div>
+
+            </div>
+          </div>
+        </div>
+        
+
+      </div>
+          <footer class="footer-distributed">
+      <div class="container">
+        <div class="footer">
+          <p> &copy; </p>
+          <h6>Follow me</h6>
+
+<ul class="social-media">
+
+  
+    <li>
+      <a title="enhanced on Github" href="https://github.com/enhanced" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    </li>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <li>
+      <a title="feed.xml RSS" href="/feed.xml" target="_blank"><i class="fa fa-rss fa-2x"></i></a>
+    </li>
+  
+
+</ul>
+
+        </div>
+      </div>
+    </footer>
+
+    </div>
+  </body>
+</html>
