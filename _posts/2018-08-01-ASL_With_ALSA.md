@@ -92,6 +92,6 @@ sudo systemctl restart asterisk.service
 
 
 ## Some additional resources:
-https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting
-https://github.com/libfuse/osspd
-https://www.alsa-project.org/main/index.php/Main_Page
+(https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting)
+(https://github.com/libfuse/osspd)
+(https://www.alsa-project.org/main/index.php/Main_Page)

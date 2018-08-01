@@ -88,9 +88,9 @@ sudo systemctl restart asterisk.service
 &lt;/ol&gt;
 
 &lt;h2 id=&quot;some-additional-resources&quot;&gt;Some additional resources:&lt;/h2&gt;
-&lt;p&gt;https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting&lt;br /&gt;
-https://github.com/libfuse/osspd&lt;br /&gt;
-https://www.alsa-project.org/main/index.php/Main_Page&lt;/p&gt;
+&lt;p&gt;(https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting)&lt;br /&gt;
+(https://github.com/libfuse/osspd)&lt;br /&gt;
+(https://www.alsa-project.org/main/index.php/Main_Page)&lt;/p&gt;
 </description>
 				<pubDate>Wed, 01 Aug 2018 06:00:00 -0600</pubDate>
 				<link>/2018/08/ASL_With_ALSA</link>
