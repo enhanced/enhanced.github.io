@@ -94,6 +94,8 @@ sudo systemctl start osspd.service
 sudo systemctl restart asterisk.service
 ```
 
+8. You should now have audio using the above method.. if not, check logs and retrace your steps.  Note that you have to manually start pulseaudio every time for now.. and that you need to start osspd.service and asterisk.service _**AFTER**_ starting pulse, but you dont' have to stay logged in...
+
 ### To-Do
 My short list of outstanding things... and in no specific order
 1. Systemize pulseaudio
