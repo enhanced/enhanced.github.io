@@ -93,7 +93,14 @@ sudo systemctl start osspd.service
 sudo systemctl restart asterisk.service
 ```
 
-## Some additional resources:
+### To-Do
+My short list of outstanding things... and in no specific order
+1. Systemize pulseaudio
+2. Benchtest audio levels of this setup vs OSS on the same hardware
+3. Benchtest CTCSS output of this setup vs OSS on the same hardware (it all sounds super clean but I need science)
+4. Produce some more examples of using pulse to pipe the audio stream out to other sources for recording/monitoring etc etc... (this gives us so many more capabilities than OSS ever dreamed of)
+
+### Some additional resources:
 [PulseAudio Troubleshooting](https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting)
 [OSSPD on Github](https://github.com/libfuse/osspd)
 [ALSA Home](https://www.alsa-project.org/main/index.php/Main_Page)
