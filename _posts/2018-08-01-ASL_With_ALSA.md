@@ -40,11 +40,11 @@ Yes, I did try fairly exhaustively to use AOSS and ALSA-OSPD but was never able 
 3. Edit /usr/share/alsa/alsa.conf to make the URI (USB Device) the default
 	* find defaults.ctl.card and defaults.pcm.card
  		- their default value is 0, change this to the # value identified in step 1 using the aplay -l command
- 5: Reboot
- 6: Install OSSPD
- 7: A few more edits
- 8: Service restarts
- 9: Audio should now work via alsa, pulse and aoss
+5. Reboot
+6. Install OSSPD
+7. A few more edits
+8. Service restarts
+9. Audio should now work via alsa, pulse and aoss
 
 ### Slightly more detail
 
@@ -89,9 +89,7 @@ sudo systemctl start osspd.service
 sudo systemctl restart asterisk.service
 ```
 
-
-
 ## Some additional resources:
-(https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting)
-(https://github.com/libfuse/osspd)
-(https://www.alsa-project.org/main/index.php/Main_Page)
+[PulseAudio Troubleshooting](https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting)
+[OSSPD on Github](https://github.com/libfuse/osspd)
+[ALSA Home](https://www.alsa-project.org/main/index.php/Main_Page)
