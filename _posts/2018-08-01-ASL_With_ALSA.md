@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "AllStar using Alsa and Pulseaudio instead of OSS"
+title: "AllStar, Alsa & Pulseaudio without OSS"
 date: 2018-08-01 12:00:00
 tags: 
  - "amateur radio"
@@ -24,9 +24,13 @@ Below you will find basic guidelines and what I edited in order to allow ASL to 
 2. You have ASL in a state where it will at least start up with the _CURRENT_ kernel.. _i.e. you built and installed the required dahdi modules from source_
 3. You know how to install applications on whatever distribution that you happen to be running
 
+Again, the good news here is that you can run current kernels without trudging through and trying to enable _broken_.. so that means security fixes and performance patches etc...  Just a little more admin overhead for now.
+
 ### Caveats
 
 Before we dive into it to far, I want to make note of a few current caveats.  Firstly I have not found a way to make OSSPD work properly with pulse running as a system wide service (if you don't know what I'm talking about, I suggest RTFM or move on).  Secondly, I have not been able to successfully get Pulse to run as a daemon using systemctl, there are issues because when you do it this way pulse expects a window manager and we don't want that overhead on the system IMHO....  So what this means is that unfortunately at this time (I'm working on a solution) when a system reboots the user needs to ssh into the box and manually do a few things.
+
+If anyone gets pulse running correctly at startup, I'm all ears and will happily publish the info!
 
 Yes, I did try fairly exhaustively to use AOSS and ALSA-OSPD but was never able to make it work, so if you are so inclined please feel free because if we can eliminate Pulse from the equation it would simplify things a bit.  Of course having pulse in there gives us a lot of other capabilities.. so there is a tradeoff I suppose.
 
@@ -34,7 +38,7 @@ Yes, I did try fairly exhaustively to use AOSS and ALSA-OSPD but was never able 
 1. **OPTIONAL** Disable the onboard audio (for Pi 3 etc...) unless you have an explicit reason to have it..
  	* Edit /lib/modprobe.d/raspi-blacklist.conf and add `blacklist snd_bcm2835`
  	* reboot
-2. Determine hardware location(s) (run all as root unless otherwise noted)
+2. Determine hardware location(s) (run all as root **or sudo** unless otherwise noted)
  	* lsusb (look for C-Media Electronics, Inc) to be sure it's even listed (your URI)
  	* aplay -l (make note of the card # associated with the USB PnP Sound Device)
 3. Edit /usr/share/alsa/alsa.conf to make the URI (USB Device) the default
